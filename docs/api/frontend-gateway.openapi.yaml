@@ -1,0 +1,180 @@
+openapi: 3.1.0
+info:
+  title: Can't Run Alone Frontend Gateway
+  version: 0.1.0
+  description: Proposed BFF contract for frontend and backend team review. Internal services are never called by the browser.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /auth/register:
+    post:
+      security: []
+      operationId: register
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/RegisterInput' } } }
+      responses:
+        '201': { description: Unverified account created, content: { application/json: { schema: { $ref: '#/components/schemas/Registration' } } } }
+        '409': { $ref: '#/components/responses/Error' }
+  /auth/verify-otp:
+    post:
+      security: []
+      operationId: verifyOtp
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [registrationId, code], properties: { registrationId: { type: string }, code: { type: string, pattern: '^[0-9]{6}$' } } } } }
+      responses:
+        '200': { description: Phone verified, content: { application/json: { schema: { $ref: '#/components/schemas/AuthSession' } } } }
+        '400': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /auth/login:
+    post:
+      security: []
+      operationId: login
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [email, password], properties: { email: { type: string, format: email }, password: { type: string, minLength: 8 } } } } }
+      responses:
+        '200': { description: Authenticated; rotating refresh token is set as HttpOnly cookie, content: { application/json: { schema: { $ref: '#/components/schemas/AuthSession' } } } }
+        '401': { $ref: '#/components/responses/Error' }
+  /auth/refresh:
+    post:
+      security: []
+      operationId: refreshSession
+      responses:
+        '200': { description: Refreshed, content: { application/json: { schema: { type: object, required: [accessToken], properties: { accessToken: { type: string } } } } } }
+        '401': { $ref: '#/components/responses/Error' }
+  /auth/logout:
+    post:
+      operationId: logout
+      responses: { '204': { description: Refresh cookie revoked } }
+  /dashboard:
+    get:
+      operationId: getDashboard
+      responses:
+        '200': { description: Aggregated home content, content: { application/json: { schema: { $ref: '#/components/schemas/Dashboard' } } } }
+        '401': { $ref: '#/components/responses/Error' }
+  /me/profile:
+    get:
+      operationId: getMyProfile
+      responses: { '200': { description: Current runner profile, content: { application/json: { schema: { $ref: '#/components/schemas/Runner' } } } } }
+    put:
+      operationId: updateMyProfile
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ProfileInput' } } }
+      responses:
+        '200': { description: Updated profile, content: { application/json: { schema: { $ref: '#/components/schemas/Runner' } } } }
+        '422': { $ref: '#/components/responses/Error' }
+  /runners:
+    get:
+      operationId: searchRunners
+      parameters:
+        - { name: radiusKm, in: query, required: true, schema: { type: number, minimum: 1, maximum: 50 } }
+        - { name: pace, in: query, schema: { type: string } }
+        - { name: experience, in: query, schema: { type: string, enum: [All, Beginner, Intermediate, Advanced] } }
+        - { name: verifiedOnly, in: query, schema: { type: boolean, default: false } }
+      responses:
+        '200': { description: Compatibility-ranked results with coarsened areas, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Runner' } } } } }
+        '429': { $ref: '#/components/responses/Error' }
+  /runners/{runnerId}:
+    get:
+      operationId: getPublicRunner
+      parameters: [ { $ref: '#/components/parameters/RunnerId' } ]
+      responses:
+        '200': { description: Privacy-filtered public profile, content: { application/json: { schema: { $ref: '#/components/schemas/Runner' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+  /buddy-requests:
+    post:
+      operationId: createBuddyRequest
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [runnerId], properties: { runnerId: { type: string }, note: { type: string, maxLength: 180 } } } } }
+      responses:
+        '201': { description: Request created, content: { application/json: { schema: { type: object, required: [id, status], properties: { id: { type: string }, status: { type: string, const: pending }, note: { type: string } } } } }
+        '409': { $ref: '#/components/responses/Error' }
+  /runs:
+    get:
+      operationId: searchRuns
+      responses: { '200': { description: Nearby upcoming runs, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Run' } } } } } }
+    post:
+      operationId: createRun
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateRunInput' } } }
+      responses:
+        '201': { description: Run created with aggregated forecast, content: { application/json: { schema: { $ref: '#/components/schemas/Run' } } } }
+        '422': { $ref: '#/components/responses/Error' }
+  /runs/{runId}:
+    get:
+      operationId: getRun
+      parameters: [ { $ref: '#/components/parameters/RunId' } ]
+      responses:
+        '200': { description: Run details with forecast, content: { application/json: { schema: { $ref: '#/components/schemas/Run' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+  /runs/{runId}/participants/me:
+    put:
+      operationId: joinRun
+      parameters: [ { $ref: '#/components/parameters/RunId' } ]
+      responses: { '200': { description: Joined, content: { application/json: { schema: { type: object, properties: { id: { type: string }, joined: { type: boolean, const: true } } } } } }, '409': { $ref: '#/components/responses/Error' } }
+    delete:
+      operationId: leaveRun
+      parameters: [ { $ref: '#/components/parameters/RunId' } ]
+      responses: { '204': { description: Left run } }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    RunnerId: { name: runnerId, in: path, required: true, schema: { type: string } }
+    RunId: { name: runId, in: path, required: true, schema: { type: string } }
+  responses:
+    Error:
+      description: Request failed
+      content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } }
+  schemas:
+    ApiError:
+      type: object
+      required: [code, message, correlationId]
+      properties: { code: { type: string }, message: { type: string }, fieldErrors: { type: object, additionalProperties: { type: string } }, correlationId: { type: string } }
+    RegisterInput:
+      type: object
+      required: [email, phoneNumber, password, pdpaConsent]
+      properties: { email: { type: string, format: email }, phoneNumber: { type: string, pattern: '^\\+66[0-9]{9}$' }, password: { type: string, minLength: 8 }, pdpaConsent: { type: boolean, const: true } }
+    Registration:
+      type: object
+      required: [registrationId, maskedPhone, expiresAt]
+      properties: { registrationId: { type: string }, maskedPhone: { type: string }, expiresAt: { type: string, format: date-time } }
+    AuthSession:
+      type: object
+      required: [accessToken, userId, profileComplete]
+      properties: { accessToken: { type: string }, userId: { type: string }, profileComplete: { type: boolean } }
+    ProfileInput:
+      type: object
+      required: [name, pace, experience, area, availability]
+      properties: { name: { type: string }, bio: { type: string, maxLength: 240 }, pace: { type: string }, experience: { type: string, enum: [Beginner, Intermediate, Advanced] }, area: { type: string }, availability: { type: string } }
+    Runner:
+      allOf:
+        - { $ref: '#/components/schemas/ProfileInput' }
+        - type: object
+          required: [id, initials, distanceKm, verified, match, color]
+          properties: { id: { type: string }, initials: { type: string }, distanceKm: { type: number }, verified: { type: boolean }, match: { type: integer, minimum: 0, maximum: 100 }, rating: { type: number, minimum: 1, maximum: 5 }, color: { type: string } }
+    Weather:
+      type: object
+      required: [temperature, humidity, rainChance, pm25, level, label, updatedAt]
+      properties: { temperature: { type: number }, humidity: { type: number }, rainChance: { type: number }, pm25: { type: number }, level: { type: string, enum: [great, fair, poor] }, label: { type: string }, updatedAt: { type: string }, stale: { type: boolean, default: false } }
+    CreateRunInput:
+      type: object
+      required: [title, meetingPoint, latitude, longitude, date, time, distanceKm, pace, participantLimit, visibility]
+      properties: { title: { type: string }, meetingPoint: { type: string }, latitude: { type: number, minimum: -90, maximum: 90 }, longitude: { type: number, minimum: -180, maximum: 180 }, date: { type: string, format: date }, time: { type: string, pattern: '^[0-2][0-9]:[0-5][0-9]$' }, distanceKm: { type: number, minimum: 1 }, pace: { type: string }, participantLimit: { type: integer, minimum: 2, maximum: 30 }, visibility: { type: string, enum: [Public, Invite only] } }
+    Run:
+      allOf:
+        - { $ref: '#/components/schemas/CreateRunInput' }
+        - type: object
+          required: [id, organizer, area, latitude, longitude, participants, weather]
+          properties: { id: { type: string }, organizer: { type: string }, area: { type: string }, latitude: { type: number }, longitude: { type: number }, participants: { type: integer }, joined: { type: boolean }, weather: { $ref: '#/components/schemas/Weather' } }
+    Dashboard:
+      type: object
+      required: [greetingName, weeklyDistanceKm, nextRun, suggestedRunners]
+      properties: { greetingName: { type: string }, weeklyDistanceKm: { type: number }, nextRun: { $ref: '#/components/schemas/Run' }, suggestedRunners: { type: array, items: { $ref: '#/components/schemas/Runner' } } }
