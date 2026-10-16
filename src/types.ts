@@ -45,12 +45,15 @@ export interface Run {
   visibility: 'Public' | 'Invite only'
   weather: Weather
   joined?: boolean
+  status?: string
+  participantIds?: string[]
+  confirmedIds?: string[]
 }
 
 export interface Dashboard {
   greetingName: string
   weeklyDistanceKm: number
-  nextRun: Run
+  nextRun: Run | null
   suggestedRunners: Runner[]
 }
 
