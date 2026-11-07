@@ -26,8 +26,8 @@ The map and its CSS load only when the run map view is opened. English is the in
 
 ## Deliverable 4 local services
 
-The application now defaults to the real gateway at `http://localhost:8088/api/v1`; set `VITE_USE_MOCK_API=true` only for explicit prototype work. Start the sibling local-integration stack and seed its demo data as documented in `../local-integration/README.md`, then run `npm run dev` and open `/login`. Two seeded accounts are `ray@example.com` and `mali@example.com`, password `runner123`.
+The application now defaults to the real gateway at `http://localhost:8088/api/v1`; set `VITE_USE_MOCK_API=true` only for explicit prototype work. Start the sibling running-buddy-integration stack and seed its demo data as documented in `../running-buddy-integration/README.md`, then run `npm run dev` and open `/login`. Two seeded accounts are `ray@example.com` and `mali@example.com`, password `runner123`.
 
 Registration uses the Identity API and an explicitly labeled console OTP adapter. Profile edits, discovery, buddy requests, live forecast previews and run creation/joining use the gateway. Activity contains incoming request responses, notifications, attendance, ratings and running history. A prepared past run allows demonstrating attendance without waiting for a new run to finish. The second participant confirmation completes the run; only confirmed participants can rate or save records.
 
-Focused UI tests cover registration/OTP, profile saving, incoming request acceptance and attendance errors. Existing prototype tests explicitly enable mock mode; full browser verification uses real backends. `screenshots/delivery4/` contains captured UI evidence. Current API tests are in `../local-integration/scripts/check_flows.py`.
+Focused UI tests cover registration/OTP, profile saving, incoming request acceptance and attendance errors. Existing prototype tests explicitly enable mock mode; full browser verification uses real backends. `screenshots/delivery4/` contains captured UI evidence. Current API tests are in `../running-buddy-integration/scripts/check_flows.py`.

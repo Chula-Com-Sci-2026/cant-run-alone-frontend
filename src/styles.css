@@ -149,3 +149,73 @@ input:focus, select:focus, textarea:focus { border-color:#60866f; }
 .meeting-picker > p { margin:7px 0 0; color:var(--muted); font-size:.7rem; }
 @media (max-width:900px) { .nearby-layout { grid-template-columns:1fr; }.nearby-map .map { height:520px; min-height:0; }.nearby-results { max-height:none; grid-template-columns:repeat(2,1fr); }.nearby-summary,.demo-location-note { grid-column:1/-1; } }
 @media (max-width:620px) { .header-actions,.header-actions a { width:100%; }.header-actions .button { width:100%; }.nearby-results { grid-template-columns:1fr; }.nearby-summary,.demo-location-note { grid-column:auto; }.nearby-map .map { height:460px; }.map-legend { left:8px; right:8px; justify-content:center; gap:9px; }.location-prompt { flex-direction:column; text-align:center; }.location-radar { margin:24px; } }
+
+/* Layout for the live profile and activity screens. */
+.profile-editor .page-title h1, .activity-page .page-title h1 { font-size:clamp(2rem,3.5vw,3.2rem); line-height:1.08; }
+.profile-editor .page-title, .activity-page .page-title { margin-bottom:30px; }
+.profile-editor-card { overflow:hidden; }
+.profile-editor .form-card { gap:22px; padding:30px; }
+.profile-editor .form-card label { font-size:.82rem; gap:9px; }
+.profile-editor .form-card select { width:100%; }
+.profile-editor .form-card > p { margin:0; padding:14px 16px; border-radius:10px; background:#eff5ed; color:var(--muted); font-size:.8rem; line-height:1.6; }
+.profile-editor .form-card > .button { justify-self:start; min-width:160px; }
+.profile-links { display:flex; flex-wrap:wrap; gap:10px; margin:24px 0 20px; color:var(--green); font-size:.85rem; font-weight:650; }
+.activity-page > h2 { margin:32px 0 14px; font-size:1.2rem; font-weight:750; }
+.activity-page > .card { padding:22px 24px; margin-bottom:12px; }
+.activity-page > .card p { margin:0; color:var(--muted); font-size:.88rem; line-height:1.6; }
+.activity-request, .activity-notification { display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
+.activity-request > p, .activity-notification > p { flex:1; min-width:190px; }
+.activity-notification > .button { font-size:.8rem; min-height:36px; }
+.activity-run { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.activity-run > h3, .activity-run > h4, .activity-run > p { grid-column:1/-1; }
+.activity-run > h3 { margin:0; font-size:1.12rem; font-weight:750; line-height:1.4; }
+.activity-run > h4 { margin:12px 0 0; padding-top:20px; border-top:1px solid var(--line); font-size:.9rem; font-weight:750; }
+.activity-run > label { display:grid; gap:8px; font-size:.8rem; font-weight:650; }
+.activity-run > label select { width:100%; }
+.activity-run > .button { justify-self:start; align-self:end; max-width:100%; font-size:.82rem; }
+.activity-page > [role="status"], .activity-page > [role="alert"] { padding:14px 18px; border-radius:12px; background:#e6f0e5; font-size:.88rem; }
+.activity-page > [role="alert"] { background:#fff0ec; }
+@media (max-width:620px) {
+  .profile-editor .form-card { padding:22px 18px; }
+  .activity-page > .card { padding:20px 18px; }
+  .activity-run { grid-template-columns:1fr; }
+  .activity-run > .button, .profile-editor .form-card > .button { width:100%; justify-self:stretch; }
+}
+
+/* Compact activity feed: simple rows instead of repeated large cards. */
+.activity-page { max-width:960px; }
+.activity-page .page-title { margin-bottom:28px; }
+.activity-page .page-title h1 { font-size:clamp(1.9rem,3vw,2.6rem); }
+.activity-page .page-title .kicker { display:none; }
+.activity-page .page-title p { font-size:.88rem; }
+.activity-page > h2 { margin:28px 0 8px; font-size:1rem; }
+.activity-page > .activity-request,
+.activity-page > .activity-notification,
+.activity-page > .activity-record {
+  min-height:52px;
+  padding:12px 0;
+  margin:0;
+  border:0;
+  border-bottom:1px solid var(--line);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  gap:10px;
+}
+.activity-page > .activity-request p,
+.activity-page > .activity-notification p,
+.activity-page > .activity-record p { color:var(--ink); font-size:.84rem; }
+.activity-notification > .button { min-height:32px; padding:0 12px; font-size:.75rem; }
+.activity-page > .activity-run { padding:18px; margin:10px 0; border-radius:12px; box-shadow:none; gap:12px; }
+.activity-run > h3 { font-size:1rem; }
+.activity-page > .activity-run p { font-size:.8rem; }
+.activity-run > h4 { margin:4px 0 0; padding-top:14px; font-size:.82rem; }
+.activity-run > label { font-size:.76rem; gap:6px; }
+.activity-run input, .activity-run select { min-height:38px; font-weight:400; }
+.activity-run > .button { min-height:36px; padding:0 12px; font-size:.76rem; }
+@media (max-width:620px) {
+  .activity-page > .activity-run { padding:16px; }
+  .activity-request > p, .activity-notification > p { min-width:0; }
+  .activity-notification { flex-wrap:nowrap; }
+  .activity-notification > .button { flex-shrink:0; }
+}

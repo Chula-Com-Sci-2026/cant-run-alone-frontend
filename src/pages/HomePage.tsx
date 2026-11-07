@@ -1,14 +1,16 @@
 import { ArrowRight, CalendarDays, LocateFixed, MapPin, Route, Sparkles } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
+import { ApiError } from '../api/gateway'
 import { useTranslation } from 'react-i18next'
 import { useDashboard } from '../api/hooks'
 import { Button, Card, LoadingCards, RunnerCard, WeatherStrip } from '../components/ui'
 
 export default function HomePage() {
   const { t } = useTranslation()
-  const { data, isPending, isError } = useDashboard()
+  const { data, isPending, isError, error, refetch } = useDashboard()
+  if (error instanceof ApiError && error.status === 401) return <Navigate to="/login" replace />
   if (isPending) return <Page><LoadingCards /></Page>
-  if (isError || !data) return <Page><Card className="empty"><h3>We lost the trail.</h3><p>Check your connection and try again.</p><Button onClick={() => location.reload()}>Try again</Button></Card></Page>
+  if (isError || !data) return <Page><Card className="empty"><h3>Home couldn’t load.</h3><p>{error instanceof ApiError ? error.message : 'The request timed out or the service could not be reached. Please try again.'}</p><Button onClick={() => void refetch()}>Try again</Button></Card></Page>
   const run = data.nextRun
   return <Page>
     <header className="hero"><div><div className="eyebrow"><Sparkles size={15} /> {t('greeting')}, {data.greetingName}</div><h1>{t('findBuddy')}</h1><p>{t('subtitle')}</p><Link className="hero-nearby" to="/nearby"><LocateFixed size={17} /> Who's nearby? <span>Events within 1 km</span></Link></div><div className="weekly-stat"><small>RUN HISTORY</small><strong>{data.weeklyDistanceKm}</strong><span>km covered</span></div></header>

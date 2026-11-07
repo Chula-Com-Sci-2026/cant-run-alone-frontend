@@ -3,7 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { gateway } from '../api/gateway'
+import { ApiError, gateway } from '../api/gateway'
 import RegisterPage from '../pages/RegisterPage'
 import ProfilePage from '../pages/ProfilePage'
 import ActivityPage from '../pages/ActivityPage'
@@ -35,13 +35,34 @@ describe('delivery 4 user flows', () => {
   })
 
   it('saves the entered runner profile through the gateway', async () => {
-    vi.spyOn(gateway, 'getMyProfile').mockRejectedValue({ message: 'Create profile' })
+    vi.spyOn(gateway, 'getMyProfile').mockRejectedValue(new ApiError('Create profile', 404))
     const save = vi.spyOn(gateway, 'saveProfile').mockResolvedValue({ id: 'me' } as never)
     view(<ProfilePage />)
-    await userEvent.type(screen.getByLabelText('Display name'), 'New Runner')
+    await userEvent.type(await screen.findByLabelText('Display name'), 'New Runner')
     await userEvent.click(screen.getByRole('button', { name: 'Save profile' }))
     expect(await screen.findByText('Profile saved.')).toBeInTheDocument()
     expect(save).toHaveBeenCalledWith(expect.objectContaining({ name: 'New Runner', latitude: 13.73, paceMin: 6 }))
+  })
+
+  it('keeps the empty editor hidden while the profile is loading', async () => {
+    let finish!: (profile: never) => void
+    vi.spyOn(gateway, 'getMyProfile').mockReturnValue(new Promise(resolve => { finish = resolve }))
+    view(<ProfilePage />)
+    expect(screen.getByRole('status')).toHaveTextContent('Loading your profile')
+    expect(screen.queryByLabelText('Display name')).not.toBeInTheDocument()
+    finish({ id: 'mali', name: 'Mali S.', bio: 'Morning runner' } as never)
+    expect(await screen.findByLabelText('Display name')).toHaveValue('Mali S.')
+  })
+
+  it('offers retry instead of an empty editor after a profile request fails', async () => {
+    vi.spyOn(gateway, 'getMyProfile')
+      .mockRejectedValueOnce(new ApiError('Profile service unavailable', 503))
+      .mockResolvedValue({ id: 'ray', name: 'Ray Attajak' } as never)
+    view(<ProfilePage />)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Profile service unavailable')
+    expect(screen.queryByLabelText('Display name')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByLabelText('Display name')).toHaveValue('Ray Attajak')
   })
 
   it('accepts incoming buddy requests and reports a failed attendance confirmation', async () => {
@@ -57,6 +78,19 @@ describe('delivery 4 user flows', () => {
     expect(accept).toHaveBeenCalledWith('request', 'accepted')
     await userEvent.click(screen.getByRole('button', { name: 'Confirm attendance' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Only participants can confirm attendance')
+  })
+  it('shows the buddy name when rating a confirmed runner', async () => {
+    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'me' } as never)
+    vi.spyOn(gateway, 'getBuddyRequests').mockResolvedValue([])
+    vi.spyOn(gateway, 'getNotifications').mockResolvedValue([])
+    vi.spyOn(gateway, 'getHistory').mockResolvedValue({ records: [], totalDistanceMeters: 0, totalDurationSeconds: 0 })
+    vi.spyOn(gateway, 'getRuns').mockResolvedValue([{ id: 'run', title: 'Past run', joined: true, date: '2020-01-01', time: '18:00', status: 'completed', confirmedIds: ['me', '22222222-buddy'], distanceKm: 5 }] as never)
+    vi.spyOn(gateway, 'getRunner').mockResolvedValue({ name: 'Mali S.' } as never)
+    const rate = vi.spyOn(gateway, 'rateParticipant').mockResolvedValue({})
+    view(<ActivityPage />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Rate Mali S.' }))
+    expect(rate).toHaveBeenCalledWith('run', '22222222-buddy', 5)
+    expect(screen.queryByText(/22222222/)).not.toBeInTheDocument()
   })
   it('checks real gateway conditions before allowing run publication', async () => {
     const conditions = vi.spyOn(gateway, 'getConditions').mockResolvedValue({ temperature: 29, humidity: 60, rainChance: 10, pm25: 15, level: 'great', label: 'Great to run', updatedAt: 'Now' })

@@ -1,26 +1,45 @@
 import { dashboard, runners, runs } from '../data/mockData'
 import type { CreateRunInput, Dashboard, Run, Runner, RunnerFilters, Weather } from '../types'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8088/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === 'true'
 let accessToken: string | null = null
+let refreshRequest: Promise<boolean> | null = null
 const mockRuns = [...runs]
 const delay = (ms = 280) => new Promise((resolve) => window.setTimeout(resolve, ms))
 
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number) { super(message) }
+}
+
 async function request<T>(path: string, init?: RequestInit, retry = true): Promise<T> {
+  const sentToken = accessToken
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}), ...init?.headers },
+    signal: init?.signal ?? AbortSignal.timeout(20_000),
+    headers: { ...(init?.body ? { 'Content-Type': 'application/json' } : {}), ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}), ...init?.headers },
   })
   if (response.status === 401 && retry) {
-    const refreshed = await fetch(`${API_BASE_URL}/auth/refresh`, { method: 'POST', credentials: 'include' })
-    if (refreshed.ok) {
+    // A slower response may arrive after another request already renewed the token.
+    if (accessToken && accessToken !== sentToken) return request<T>(path, init, false)
+    refreshRequest ??= (async () => {
+      const refreshed = await fetch(`${API_BASE_URL}/auth/refresh`, { method: 'POST', body: '{}', headers: { 'Content-Type': 'application/json' }, credentials: 'include', signal: AbortSignal.timeout(20_000) })
+      if (refreshed.status === 401 || refreshed.status === 403) return false
+      if (!refreshed.ok) throw new ApiError('Sign-in service is temporarily unavailable. Please try again.', refreshed.status)
       accessToken = ((await refreshed.json()) as { accessToken: string }).accessToken
+      return true
+    })().finally(() => { refreshRequest = null })
+    if (await refreshRequest) {
       return request<T>(path, init, false)
     }
+    accessToken = null
+    window.dispatchEvent(new Event('auth:expired'))
   }
-  if (!response.ok) throw await response.json()
+  if (!response.ok) {
+    const failure = await response.json().catch(() => ({})) as { message?: string }
+    throw new ApiError(failure.message ?? `Request failed (${response.status}). Please try again.`, response.status)
+  }
   if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
 }
