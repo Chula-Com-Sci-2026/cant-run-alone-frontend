@@ -1,4 +1,5 @@
-import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet'
+import PlainMapLayer from './PlainMapLayer'
+import { MapContainer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -10,5 +11,5 @@ function Picker({ position, onChange }: { position: [number, number]; onChange: 
 }
 
 export default function MeetingPointMap({ latitude, longitude, onChange }: { latitude: number; longitude: number; onChange: (latitude: number, longitude: number) => void }) {
-  return <div className="meeting-picker"><MapContainer center={[latitude, longitude]} zoom={15} scrollWheelZoom className="map"><TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /><Picker position={[latitude, longitude]} onChange={onChange} /></MapContainer><p>Click the map to move the meeting pin. Use +/− or scroll to zoom.</p></div>
+  return <div className="meeting-picker"><MapContainer center={[latitude, longitude]} zoom={15} scrollWheelZoom className="map"><PlainMapLayer /><Picker position={[latitude, longitude]} onChange={onChange} /></MapContainer><p>Click the map to move the meeting pin. Use +/− or scroll to zoom.</p></div>
 }

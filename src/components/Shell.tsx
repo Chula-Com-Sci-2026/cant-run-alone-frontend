@@ -6,6 +6,7 @@ const nav = [
   { to: '/', icon: Home, label: 'home' },
   { to: '/discover', icon: Compass, label: 'discover' },
   { to: '/runs', icon: CalendarDays, label: 'runs' },
+  { to: '/activity', icon: CalendarDays, label: 'Activity' },
   { to: '/profile', icon: UserRound, label: 'profile' },
 ]
 

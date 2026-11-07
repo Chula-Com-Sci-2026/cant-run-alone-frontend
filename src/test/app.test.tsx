@@ -2,8 +2,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from '../App'
+
+vi.stubEnv('VITE_USE_MOCK_API', 'true')
 
 function renderApp(route = '/') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
@@ -29,8 +31,8 @@ describe('core frontend flows', () => {
   })
 
   it('changes the visible navigation language', async () => {
-    renderApp('/profile')
-    await userEvent.click(screen.getByRole('button', { name: 'ภาษาไทย' }))
+    renderApp('/discover')
+    await userEvent.click(screen.getByRole('button', { name: 'ไทย' }))
     expect((await screen.findAllByText('หน้าหลัก')).length).toBeGreaterThan(0)
   })
 })

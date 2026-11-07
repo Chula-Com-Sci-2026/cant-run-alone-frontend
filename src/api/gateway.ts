@@ -1,33 +1,78 @@
 import { dashboard, runners, runs } from '../data/mockData'
-import type { CreateRunInput, Dashboard, Run, Runner, RunnerFilters } from '../types'
+import type { CreateRunInput, Dashboard, Run, Runner, RunnerFilters, Weather } from '../types'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api/v1'
-const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API !== 'false'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
+const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === 'true'
 let accessToken: string | null = null
+let refreshRequest: Promise<boolean> | null = null
 const mockRuns = [...runs]
 const delay = (ms = 280) => new Promise((resolve) => window.setTimeout(resolve, ms))
 
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number) { super(message) }
+}
+
 async function request<T>(path: string, init?: RequestInit, retry = true): Promise<T> {
+  const sentToken = accessToken
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}), ...init?.headers },
+    signal: init?.signal ?? AbortSignal.timeout(20_000),
+    headers: { ...(init?.body ? { 'Content-Type': 'application/json' } : {}), ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}), ...init?.headers },
   })
   if (response.status === 401 && retry) {
-    const refreshed = await fetch(`${API_BASE_URL}/auth/refresh`, { method: 'POST', credentials: 'include' })
-    if (refreshed.ok) {
+    // A slower response may arrive after another request already renewed the token.
+    if (accessToken && accessToken !== sentToken) return request<T>(path, init, false)
+    refreshRequest ??= (async () => {
+      const refreshed = await fetch(`${API_BASE_URL}/auth/refresh`, { method: 'POST', body: '{}', headers: { 'Content-Type': 'application/json' }, credentials: 'include', signal: AbortSignal.timeout(20_000) })
+      if (refreshed.status === 401 || refreshed.status === 403) return false
+      if (!refreshed.ok) throw new ApiError('Sign-in service is temporarily unavailable. Please try again.', refreshed.status)
       accessToken = ((await refreshed.json()) as { accessToken: string }).accessToken
+      return true
+    })().finally(() => { refreshRequest = null })
+    if (await refreshRequest) {
       return request<T>(path, init, false)
     }
+    accessToken = null
+    window.dispatchEvent(new Event('auth:expired'))
   }
-  if (!response.ok) throw await response.json()
+  if (!response.ok) {
+    const failure = await response.json().catch(() => ({})) as { message?: string }
+    throw new ApiError(failure.message ?? `Request failed (${response.status}). Please try again.`, response.status)
+  }
+  if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
 }
 
+export interface BuddyRequest { id: string; senderId: string; recipientId: string; status: string }
+export interface Notification { id: string; type: string; is_read: boolean; payload: { senderId: string; status: string } }
+export interface RunningRecord { id: string; distance_meters: number; duration_seconds: number; occurred_at: string }
+export interface History { records: RunningRecord[]; totalDistanceMeters: number; totalDurationSeconds: number }
+
 export const gateway = {
+  getConditions: (input: CreateRunInput) => request<Weather>(`/conditions?latitude=${input.latitude}&longitude=${input.longitude}&at=${encodeURIComponent(`${input.date}T${input.time}:00+07:00`)}`),
+  async register(input: { email: string; password: string; phoneNumber: string; pdpaConsent: boolean }) {
+    return request<{ registrationId: string; maskedPhone: string; deliveryAdapter: string }>('/auth/register', { method: 'POST', body: JSON.stringify(input) }, false)
+  },
+  async verifyOtp(registrationId: string, code: string) {
+    const result = await request<{ accessToken: string; userId: string }>('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ registrationId, code }) }, false)
+    accessToken = result.accessToken
+    return result
+  },
+  async logout() { await request('/auth/logout', { method: 'POST' }); accessToken = null },
+  getMyProfile: () => request<Runner & { paceMin: number; paceMax: number; latitude: number; longitude: number }>('/me/profile'),
+  saveProfile: (input: { name: string; bio: string; paceMin: number; paceMax: number; experience: string; area: string; availability: string; latitude: number; longitude: number }) => request<Runner>('/me/profile', { method: 'PUT', body: JSON.stringify(input) }),
+  getBuddyRequests: () => request<BuddyRequest[]>('/buddy-requests'),
+  respondToBuddyRequest: (id: string, decision: string) => request(`/buddy-requests/${id}`, { method: 'PATCH', body: JSON.stringify({ decision }) }),
+  getNotifications: () => request<Notification[]>('/notifications'),
+  markNotificationRead: (id: string) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
+  getHistory: () => request<History>('/me/history'),
+  confirmAttendance: (id: string) => request(`/runs/${id}/attendance`, { method: 'POST' }),
+  rateParticipant: (id: string, rateeId: string, score: number) => request(`/runs/${id}/ratings`, { method: 'POST', body: JSON.stringify({ rateeId, punctuality: score, paceAccuracy: score, friendliness: score }) }),
+  logRecord: (runId: string, distanceMeters: number, durationSeconds: number) => request('/running_records', { method: 'POST', body: JSON.stringify({ running_record: { run_id: runId, distance_meters: distanceMeters, duration_seconds: durationSeconds, occurred_at: new Date().toISOString() } }) }),
   async login(email: string, password: string) {
     if (USE_MOCK_API) { await delay(); accessToken = 'mock-access-token'; return { userId: 'me', profileComplete: true } }
-    const result = await request<{ accessToken: string; userId: string; profileComplete: boolean }>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
+    const result = await request<{ accessToken: string; userId: string; profileComplete: boolean }>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }, false)
     accessToken = result.accessToken
     return result
   },
