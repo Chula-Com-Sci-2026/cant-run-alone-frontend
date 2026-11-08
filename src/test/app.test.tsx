@@ -22,12 +22,19 @@ describe('core frontend flows', () => {
     expect(screen.getByText(/12.4/)).toBeInTheDocument()
   })
 
-  it('filters discovery results to verified runners', async () => {
+  it('filters discovery results by experience', async () => {
     renderApp('/discover')
     expect(await screen.findByText('Pim C.')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('checkbox', { name: /verified only/i }))
+    await userEvent.selectOptions(screen.getByLabelText('Experience'), 'Advanced')
     await waitFor(() => expect(screen.queryByText('Pim C.')).not.toBeInTheDocument())
+    expect(await screen.findByText('Narin K.')).toBeInTheDocument()
+  })
+
+  it('shows a runner card from the public profile fields', async () => {
+    renderApp('/discover')
     expect(await screen.findByText('Mali S.')).toBeInTheDocument()
+    expect(screen.getAllByText('6:00–6:30 min/km').length).toBeGreaterThan(0)
+    expect(screen.getAllByLabelText('Mali S. avatar')[0]).toHaveTextContent('MS')
   })
 
   it('changes the visible navigation language', async () => {

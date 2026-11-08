@@ -1,10 +1,10 @@
 import type { Dashboard, Run, Runner } from '../types'
 
 export const runners: Runner[] = [
-  { id: 'runner-1', name: 'Mali S.', initials: 'MS', area: 'Lumphini area', distanceKm: 1.2, pace: '6:00–6:30', experience: 'Intermediate', availability: 'Tue & Thu · 18:30', bio: 'After-work runner, coffee fan, and a very reliable pacer.', verified: true, match: 96, rating: 4.9, color: '#f4a261' },
-  { id: 'runner-2', name: 'Narin K.', initials: 'NK', area: 'Benjakitti area', distanceKm: 2.4, pace: '5:30–6:00', experience: 'Advanced', availability: 'Wed · 06:00', bio: 'Easy miles on weekdays, longer runs when Bangkok is still quiet.', verified: true, match: 91, rating: 4.7, color: '#5c8d89' },
-  { id: 'runner-3', name: 'Pim C.', initials: 'PC', area: 'Chula area', distanceKm: 3.1, pace: '6:30–7:00', experience: 'Beginner', availability: 'Sat & Sun · 07:00', bio: 'Building a first 10K habit. Friendly pace and plenty of water breaks.', verified: false, match: 84, color: '#8367c7' },
-  { id: 'runner-4', name: 'Ton P.', initials: 'TP', area: 'Ari area', distanceKm: 4.8, pace: '6:00–6:30', experience: 'Intermediate', availability: 'Mon & Fri · 19:00', bio: 'Night runner who never skips the cooldown.', verified: true, match: 78, rating: 4.8, color: '#e76f51' },
+  { id: 'runner-1', name: 'Mali S.', area: 'Lumphini area', areaCell: { latitude: 13.73, longitude: 100.54 }, photoUrl: null, distanceKm: 1.2, paceMin: 6, paceMax: 6.5, experience: 'Intermediate', availability: 'Tue & Thu · 18:30', usualDistance: '5–10 km', gear: null, bio: 'After-work runner, coffee fan, and a very reliable pacer.', rating: 4.9 },
+  { id: 'runner-2', name: 'Narin K.', area: 'Benjakitti area', areaCell: { latitude: 13.73, longitude: 100.56 }, photoUrl: null, distanceKm: 2.4, paceMin: 5.5, paceMax: 6, experience: 'Advanced', availability: 'Wed · 06:00', usualDistance: 'Over 10 km', gear: null, bio: 'Easy miles on weekdays, longer runs when Bangkok is still quiet.', rating: 4.7 },
+  { id: 'runner-3', name: 'Pim C.', area: 'Chula area', areaCell: { latitude: 13.74, longitude: 100.52 }, photoUrl: null, distanceKm: 3.1, paceMin: 6.5, paceMax: 7, experience: 'Beginner', availability: 'Sat & Sun · 07:00', usualDistance: 'Under 5 km', gear: null, bio: 'Building a first 10K habit. Friendly pace and plenty of water breaks.' },
+  { id: 'runner-4', name: 'Ton P.', area: 'Ari area', areaCell: { latitude: 13.78, longitude: 100.54 }, photoUrl: null, distanceKm: 4.8, paceMin: 6, paceMax: 6.5, experience: 'Intermediate', availability: 'Mon & Fri · 19:00', usualDistance: '5–10 km', gear: null, bio: 'Night runner who never skips the cooldown.', rating: 4.8 },
 ]
 
 export const runs: Run[] = [

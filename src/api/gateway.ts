@@ -1,5 +1,5 @@
 import { dashboard, runners, runs } from '../data/mockData'
-import type { CreateRunInput, Dashboard, Run, Runner, RunnerFilters, Weather } from '../types'
+import type { CreateRunInput, Dashboard, MyProfile, Run, Runner, RunnerFilters, Weather } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === 'true'
@@ -45,8 +45,10 @@ async function request<T>(path: string, init?: RequestInit, retry = true): Promi
 }
 
 export interface BuddyRequest { id: string; senderId: string; recipientId: string; status: string }
-export interface Notification { id: string; type: string; is_read: boolean; payload: { senderId: string; status: string } }
-export interface RunningRecord { id: string; distance_meters: number; duration_seconds: number; occurred_at: string }
+/** running-buddy-contracts notification.openapi.json: NotificationPublic and NotificationsPublic. */
+export interface Notification { id: string; type: string; category: string; data: { requestId: string; senderId: string; recipientId: string; status: string }; occurredAt: string; readAt: string | null }
+export interface NotificationPage { items: Notification[]; unreadCount: number; nextCursor: string | null }
+export interface RunningRecord { id: string; run_id: string; distance_meters: number; duration_seconds: number; occurred_at: string }
 export interface History { records: RunningRecord[]; totalDistanceMeters: number; totalDurationSeconds: number }
 
 export const gateway = {
@@ -60,11 +62,11 @@ export const gateway = {
     return result
   },
   async logout() { await request('/auth/logout', { method: 'POST' }); accessToken = null },
-  getMyProfile: () => request<Runner & { paceMin: number; paceMax: number; latitude: number; longitude: number }>('/me/profile'),
-  saveProfile: (input: { name: string; bio: string; paceMin: number; paceMax: number; experience: string; area: string; availability: string; latitude: number; longitude: number }) => request<Runner>('/me/profile', { method: 'PUT', body: JSON.stringify(input) }),
+  getMyProfile: () => request<MyProfile>('/me/profile'),
+  saveProfile: (input: { name: string; bio: string; paceMin: number; paceMax: number; experience: string; area: string; availability: string; latitude: number; longitude: number }) => request<MyProfile>('/me/profile', { method: 'PUT', body: JSON.stringify(input) }),
   getBuddyRequests: () => request<BuddyRequest[]>('/buddy-requests'),
   respondToBuddyRequest: (id: string, decision: string) => request(`/buddy-requests/${id}`, { method: 'PATCH', body: JSON.stringify({ decision }) }),
-  getNotifications: () => request<Notification[]>('/notifications'),
+  getNotifications: () => request<NotificationPage>('/notifications'),
   markNotificationRead: (id: string) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
   getHistory: () => request<History>('/me/history'),
   confirmAttendance: (id: string) => request(`/runs/${id}/attendance`, { method: 'POST' }),
@@ -78,9 +80,9 @@ export const gateway = {
   },
   async getDashboard(): Promise<Dashboard> { if (USE_MOCK_API) { await delay(); return dashboard } return request('/dashboard') },
   async getRunners(filters: RunnerFilters): Promise<Runner[]> {
-    if (!USE_MOCK_API) return request(`/runners?radiusKm=${filters.radiusKm}&pace=${encodeURIComponent(filters.pace)}&experience=${filters.experience}&verifiedOnly=${filters.verifiedOnly}`)
+    if (!USE_MOCK_API) return request(`/runners?radiusKm=${filters.radiusKm}&pace=${encodeURIComponent(filters.pace)}&experience=${filters.experience}`)
     await delay()
-    return runners.filter((runner) => (filters.experience === 'All' || runner.experience === filters.experience) && (!filters.verifiedOnly || runner.verified) && runner.distanceKm <= filters.radiusKm)
+    return runners.filter((runner) => (filters.experience === 'All' || runner.experience === filters.experience) && (runner.distanceKm ?? 0) <= filters.radiusKm)
   },
   async getRunner(id: string): Promise<Runner> { if (USE_MOCK_API) { await delay(); return runners.find((runner) => runner.id === id) ?? runners[0] } return request(`/runners/${id}`) },
   async sendBuddyRequest(runnerId: string, note: string) { if (USE_MOCK_API) { await delay(); return { id: `request-${runnerId}`, status: 'pending', note } } return request('/buddy-requests', { method: 'POST', body: JSON.stringify({ runnerId, note }) }) },
