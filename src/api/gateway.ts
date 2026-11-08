@@ -48,7 +48,7 @@ export interface BuddyRequest { id: string; senderId: string; recipientId: strin
 /** running-buddy-contracts notification.openapi.json: NotificationPublic and NotificationsPublic. */
 export interface Notification { id: string; type: string; category: string; data: { requestId: string; senderId: string; recipientId: string; status: string }; occurredAt: string; readAt: string | null }
 export interface NotificationPage { items: Notification[]; unreadCount: number; nextCursor: string | null }
-export interface RunningRecord { id: string; distance_meters: number; duration_seconds: number; occurred_at: string }
+export interface RunningRecord { id: string; run_id: string; distance_meters: number; duration_seconds: number; occurred_at: string }
 export interface History { records: RunningRecord[]; totalDistanceMeters: number; totalDurationSeconds: number }
 
 export const gateway = {
