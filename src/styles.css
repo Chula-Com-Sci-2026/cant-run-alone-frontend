@@ -165,20 +165,13 @@ input:focus, select:focus, textarea:focus { border-color:#60866f; }
 .activity-request, .activity-notification { display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
 .activity-request > p, .activity-notification > p { flex:1; min-width:190px; }
 .activity-notification > .button { font-size:.8rem; min-height:36px; }
-.activity-run { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
-.activity-run > h3, .activity-run > h4, .activity-run > p { grid-column:1/-1; }
-.activity-run > h3 { margin:0; font-size:1.12rem; font-weight:750; line-height:1.4; }
-.activity-run > h4 { margin:12px 0 0; padding-top:20px; border-top:1px solid var(--line); font-size:.9rem; font-weight:750; }
-.activity-run > label { display:grid; gap:8px; font-size:.8rem; font-weight:650; }
-.activity-run > label select { width:100%; }
-.activity-run > .button { justify-self:start; align-self:end; max-width:100%; font-size:.82rem; }
+.activity-run { display:flex; flex-direction:column; gap:0; }
 .activity-page > [role="status"], .activity-page > [role="alert"] { padding:14px 18px; border-radius:12px; background:#e6f0e5; font-size:.88rem; }
 .activity-page > [role="alert"] { background:#fff0ec; }
 @media (max-width:620px) {
   .profile-editor .form-card { padding:22px 18px; }
   .activity-page > .card { padding:20px 18px; }
-  .activity-run { grid-template-columns:1fr; }
-  .activity-run > .button, .profile-editor .form-card > .button { width:100%; justify-self:stretch; }
+  .profile-editor .form-card > .button { width:100%; justify-self:stretch; }
 }
 
 /* Compact activity feed: simple rows instead of repeated large cards. */
@@ -206,14 +199,45 @@ input:focus, select:focus, textarea:focus { border-color:#60866f; }
 .activity-page > .activity-record p { color:var(--ink); font-size:.84rem; }
 .activity-notification > .button { min-height:32px; padding:0 12px; font-size:.75rem; }
 .activity-page > .activity-run { padding:18px; margin:10px 0; border-radius:12px; box-shadow:none; gap:12px; }
-.activity-run > h3 { font-size:1rem; }
 .activity-page > .activity-run p { font-size:.8rem; }
-.activity-run > h4 { margin:4px 0 0; padding-top:14px; font-size:.82rem; }
-.activity-run > label { font-size:.76rem; gap:6px; }
 .activity-run input, .activity-run select { min-height:38px; font-weight:400; }
-.activity-run > .button { min-height:36px; padding:0 12px; font-size:.76rem; }
+.activity-run .button { min-height:36px; padding:0 12px; font-size:.76rem; }
+
+/* A past run as three steps: confirm, rate, log. A finished step shows a check and its result. */
+.activity-run__header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding-bottom:12px; }
+.activity-run__header h3 { margin:0; font-size:1rem; font-weight:750; line-height:1.4; }
+.run-step { display:grid; grid-template-columns:28px minmax(0,1fr); gap:12px; padding:14px 0; border-top:1px solid var(--line); }
+.run-step__marker { width:26px; height:26px; display:grid; place-items:center; border-radius:50%; border:1.5px solid var(--line); color:var(--muted); font-size:.75rem; font-weight:750; }
+.run-step--done .run-step__marker { border-color:transparent; background:#dcf6e9; color:#11613f; }
+.run-step__body { display:grid; gap:8px; min-width:0; }
+.run-step__body h4 { margin:3px 0 0; font-size:.86rem; font-weight:750; }
+.run-step--done .run-step__body h4 { color:var(--muted); }
+.run-step__body > .button { justify-self:start; }
+.run-step__row { display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px; }
+.run-step__row label { display:grid; gap:6px; font-size:.76rem; font-weight:650; }
+.run-feedback { margin:4px 0 0!important; padding:10px 14px; border-radius:10px; font-size:.8rem!important; }
+.run-feedback--success { background:#e6f0e5; color:#11613f!important; }
+.run-feedback--danger { background:#fff0ec; color:#9a321d!important; }
+/* A buddy request or notification as a row about a person: avatar, sentence, state, actions. */
+.activity-page > .activity-person { display:flex; align-items:center; gap:14px; padding:14px 16px; margin:0 0 8px; border-radius:12px; box-shadow:none; }
+.activity-person .avatar { width:40px; height:40px; flex:none; font-size:.8rem; border-width:2px; }
+.activity-person__text { flex:1; min-width:0; display:grid; gap:4px; justify-items:start; }
+.activity-page > .activity-person p { margin:0; color:var(--ink); font-size:.86rem; }
+.activity-person__text small { color:var(--muted); font-size:.72rem; }
+.activity-person__actions { display:flex; gap:8px; flex-wrap:wrap; }
+.activity-person__actions .button { min-height:34px; padding:0 12px; font-size:.76rem; }
+.activity-person--unread { border-left:3px solid var(--green); }
+@media (max-width:620px) {
+  .activity-page > .activity-person { flex-wrap:wrap; }
+  .activity-person__actions { width:100%; }
+  .activity-person__actions .button { flex:1; }
+}
+.activity-run__details > summary { cursor:pointer; padding:8px 0 4px; color:var(--muted); font-size:.78rem; font-weight:650; }
+.visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 @media (max-width:620px) {
   .activity-page > .activity-run { padding:16px; }
+  .run-step__row { flex-direction:column; align-items:stretch; }
+  .run-step__row .button, .run-step__body > .button { width:100%; }
   .activity-request > p, .activity-notification > p { min-width:0; }
   .activity-notification { flex-wrap:nowrap; }
   .activity-notification > .button { flex-shrink:0; }
