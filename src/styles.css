@@ -73,11 +73,10 @@ h2 { letter-spacing: -.035em; }
 .runner-card__top { display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:center; }
 .avatar { width:48px; height:48px; display:grid; place-items:center; border-radius:50%; color:white; font-weight:800; border:3px solid #fff; box-shadow:0 0 0 1px #c9d0ca; }
 .avatar--large { width:100px; height:100px; font-size:1.7rem; flex:none; }
+img.avatar { object-fit:cover; }
 .runner-name { display:flex; align-items:center; gap:5px; font-weight:800; }
 .runner-name svg, .profile-hero h1 svg, .profile-hero h2 svg { color:#17885e; vertical-align:middle; }
 .muted { display:flex; align-items:center; gap:3px; margin-top:3px; color:var(--muted); font-size:.76rem; }
-.match { color:var(--green); font-size:1rem; font-weight:900; text-align:right; }
-.match small { display:block; color:var(--muted); font-size:.58rem; letter-spacing:.08em; text-transform:uppercase; }
 .pill-row { display:flex; flex-wrap:wrap; gap:6px; margin:18px 0; }
 .pill-row span { padding:6px 9px; background:#f1f4ef; color:#53615a; border-radius:7px; font-size:.7rem; }
 .text-link { display:flex; align-items:center; justify-content:space-between; padding-top:13px; border-top:1px solid var(--line); color:var(--green); font-weight:750; font-size:.8rem; }
@@ -99,7 +98,7 @@ input:focus, select:focus, textarea:focus { border-color:#60866f; }
 .back { display:inline-flex; align-items:center; gap:7px; margin-bottom:30px; color:#506158; font-size:.84rem; font-weight:700; }
 .profile-hero { display:flex; align-items:center; gap:24px; padding:28px; background:linear-gradient(120deg,#fff 70%,#ebf4e7); }
 .profile-hero h1 { display:flex; align-items:center; gap:8px; margin:10px 0; font-size:2.8rem; }.profile-hero h2 { margin:0 0 6px; }
-.profile-hero p { color:var(--muted); margin:0; }.match-badge { color:var(--green); font-weight:900; font-size:.68rem; letter-spacing:.12em; }
+.profile-hero p { color:var(--muted); margin:0; }
 .profile-facts, .detail-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:13px; margin:16px 0; }
 .profile-facts .card, .detail-grid .card { display:grid; gap:5px; padding:19px; }.profile-facts svg, .detail-grid svg { color:var(--green); }.profile-facts small, .detail-grid small, .meeting-card small { color:var(--muted); font-size:.62rem; font-weight:800; letter-spacing:.1em; }.profile-facts span, .detail-grid span { color:var(--muted); font-size:.76rem; }
 .request-box { padding:26px; display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:end; }.request-box > div svg { color:var(--green); }.request-box h2 { margin:8px 0; }.request-box p { color:var(--muted); margin:0; }.request-box label, .form-card label { display:grid; gap:7px; font-size:.76rem; font-weight:750; }.request-box .button { grid-column:2; }

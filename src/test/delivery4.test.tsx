@@ -68,7 +68,7 @@ describe('delivery 4 user flows', () => {
   it('accepts incoming buddy requests and reports a failed attendance confirmation', async () => {
     vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'me' } as never)
     vi.spyOn(gateway, 'getBuddyRequests').mockResolvedValue([{ id: 'request', senderId: 'buddy', recipientId: 'me', status: 'pending' }])
-    vi.spyOn(gateway, 'getNotifications').mockResolvedValue([])
+    vi.spyOn(gateway, 'getNotifications').mockResolvedValue({ items: [], unreadCount: 0, nextCursor: null })
     vi.spyOn(gateway, 'getHistory').mockResolvedValue({ records: [], totalDistanceMeters: 0, totalDurationSeconds: 0 })
     vi.spyOn(gateway, 'getRuns').mockResolvedValue([{ id: 'run', title: 'Past run', joined: true, date: '2020-01-01', time: '18:00', status: 'attendance_open' }] as never)
     const accept = vi.spyOn(gateway, 'respondToBuddyRequest').mockResolvedValue({})
@@ -82,7 +82,7 @@ describe('delivery 4 user flows', () => {
   it('shows the buddy name when rating a confirmed runner', async () => {
     vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'me' } as never)
     vi.spyOn(gateway, 'getBuddyRequests').mockResolvedValue([])
-    vi.spyOn(gateway, 'getNotifications').mockResolvedValue([])
+    vi.spyOn(gateway, 'getNotifications').mockResolvedValue({ items: [], unreadCount: 0, nextCursor: null })
     vi.spyOn(gateway, 'getHistory').mockResolvedValue({ records: [], totalDistanceMeters: 0, totalDurationSeconds: 0 })
     vi.spyOn(gateway, 'getRuns').mockResolvedValue([{ id: 'run', title: 'Past run', joined: true, date: '2020-01-01', time: '18:00', status: 'completed', confirmedIds: ['me', '22222222-buddy'], distanceKm: 5 }] as never)
     vi.spyOn(gateway, 'getRunner').mockResolvedValue({ name: 'Mali S.' } as never)

@@ -1,20 +1,35 @@
 export type Experience = 'Beginner' | 'Intermediate' | 'Advanced'
 export type WeatherLevel = 'great' | 'fair' | 'poor'
 
+/** A runner's public card from Profile (running-buddy-contracts profile.openapi.json, PublicCard). A hidden or unset field is null. */
 export interface Runner {
   id: string
   name: string
-  initials: string
   area: string
-  distanceKm: number
-  pace: string
+  areaCell: { latitude: number; longitude: number }
+  photoUrl: string | null
+  bio: string | null
+  paceMin: number | null
+  paceMax: number | null
+  experience: Experience | null
+  availability: string | null
+  usualDistance: string | null
+  gear: string[] | null
+  /** Search results only: kilometres between area cells, never exact points. */
+  distanceKm?: number
+  rating?: number
+}
+
+/** The owner's view of their own profile (profile.openapi.json, Profile). */
+export interface MyProfile extends Runner {
+  paceMin: number
+  paceMax: number
   experience: Experience
   availability: string
-  bio: string
-  verified: boolean
-  match: number
-  rating?: number
-  color: string
+  latitude: number
+  longitude: number
+  photoRef: string | null
+  hiddenFields: string[]
 }
 
 export interface Weather {
@@ -61,7 +76,6 @@ export interface RunnerFilters {
   radiusKm: number
   pace: string
   experience: 'All' | Experience
-  verifiedOnly: boolean
 }
 
 export interface CreateRunInput {
