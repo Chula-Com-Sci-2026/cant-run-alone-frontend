@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ApiError, gateway } from '../api/gateway'
+import AuthPage from '../pages/AuthPage'
 import RegisterPage from '../pages/RegisterPage'
 import ProfilePage from '../pages/ProfilePage'
 import ActivityPage from '../pages/ActivityPage'
@@ -34,6 +35,22 @@ describe('delivery 4 user flows', () => {
     expect(verify).toHaveBeenCalledWith('registration', '654321')
   })
 
+  it('signs a runner with a profile in to Home', async () => {
+    vi.spyOn(gateway, 'login').mockResolvedValue({ userId: 'ray', profileComplete: false } as never)
+    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray Attajak' } as never)
+    render(<QueryClientProvider client={new QueryClient()}><MemoryRouter initialEntries={['/login']}><Routes><Route path="/login" element={<AuthPage />} /><Route path="/" element={<p>Home</p>} /><Route path="/profile" element={<p>Profile setup</p>} /></Routes></MemoryRouter></QueryClientProvider>)
+    await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
+    expect(await screen.findByText('Home')).toBeInTheDocument()
+  })
+
+  it('sends a runner without a profile to profile setup after sign-in', async () => {
+    vi.spyOn(gateway, 'login').mockResolvedValue({ userId: 'new', profileComplete: false } as never)
+    vi.spyOn(gateway, 'getMyProfile').mockRejectedValue(new ApiError('Create your profile', 404))
+    render(<QueryClientProvider client={new QueryClient()}><MemoryRouter initialEntries={['/login']}><Routes><Route path="/login" element={<AuthPage />} /><Route path="/" element={<p>Home</p>} /><Route path="/profile" element={<p>Profile setup</p>} /></Routes></MemoryRouter></QueryClientProvider>)
+    await userEvent.click(screen.getByRole('button', { name: /Sign in/ }))
+    expect(await screen.findByText('Profile setup')).toBeInTheDocument()
+  })
+
   it('saves the entered runner profile through the gateway', async () => {
     vi.spyOn(gateway, 'getMyProfile').mockRejectedValue(new ApiError('Create profile', 404))
     const save = vi.spyOn(gateway, 'saveProfile').mockResolvedValue({ id: 'me' } as never)
@@ -42,6 +59,36 @@ describe('delivery 4 user flows', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save profile' }))
     expect(await screen.findByText('Profile saved.')).toBeInTheDocument()
     expect(save).toHaveBeenCalledWith(expect.objectContaining({ name: 'New Runner', latitude: 13.73, paceMin: 6 }))
+  })
+
+  it('uploads a profile photo through the photo handshake', async () => {
+    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray Attajak', photoUrl: null } as never)
+    const upload = vi.spyOn(gateway, 'uploadPhoto').mockResolvedValue({ id: 'ray' } as never)
+    view(<ProfilePage />)
+    expect(await screen.findByRole('button', { name: 'Upload photo' })).toBeInTheDocument()
+    const photo = new File(['jpeg'], 'me.jpg', { type: 'image/jpeg' })
+    await userEvent.upload(screen.getByLabelText('Photo file'), photo)
+    expect(await screen.findByText('Photo updated.')).toBeInTheDocument()
+    expect(upload).toHaveBeenCalledWith(photo)
+  })
+
+  it('rejects a photo over 5 MB before uploading', async () => {
+    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray Attajak', photoUrl: null } as never)
+    const upload = vi.spyOn(gateway, 'uploadPhoto')
+    view(<ProfilePage />)
+    const big = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'big.png', { type: 'image/png' })
+    await userEvent.upload(await screen.findByLabelText('Photo file'), big)
+    expect(await screen.findByText('Choose a photo under 5 MB.')).toBeInTheDocument()
+    expect(upload).not.toHaveBeenCalled()
+  })
+
+  it('removes the current profile photo', async () => {
+    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray Attajak', photoUrl: 'http://127.0.0.1:9000/profile-service/photos/ray/1' } as never)
+    const remove = vi.spyOn(gateway, 'removePhoto').mockResolvedValue({ id: 'ray' } as never)
+    view(<ProfilePage />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Remove photo' }))
+    expect(await screen.findByText('Photo removed.')).toBeInTheDocument()
+    expect(remove).toHaveBeenCalled()
   })
 
   it('keeps the empty editor hidden while the profile is loading', async () => {
