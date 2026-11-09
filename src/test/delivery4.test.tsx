@@ -9,6 +9,8 @@ import RegisterPage from '../pages/RegisterPage'
 import ProfilePage from '../pages/ProfilePage'
 import ActivityPage from '../pages/ActivityPage'
 import CreateRunPage from '../pages/CreateRunPage'
+import RunPage from '../pages/RunPage'
+import RunsPage from '../pages/RunsPage'
 
 vi.mock('../components/MeetingPointMap', () => ({ default: () => <div>Meeting point map</div> }))
 
@@ -202,6 +204,48 @@ describe('past run steps', () => {
     view(<ActivityPage />)
     const titles = (await screen.findAllByRole('heading', { level: 3 })).map((heading) => heading.textContent)
     expect(titles).toEqual(['Newer run', 'Older run'])
+  })
+})
+
+describe('leaving and joining a run', () => {
+  const run = { id: 'run', title: 'Evening 5K', organizer: 'Runner', area: 'Lumphini', meetingPoint: 'Gate 1', date: '2099-01-01', time: '18:00', distanceKm: 5, pace: '6', participants: 2, participantLimit: 5, visibility: 'Public', joined: true, startsAt: '2099-01-01T11:00:00Z', weather: { temperature: 29, humidity: 65, rainChance: 20, pm25: 15, level: 'great', label: 'Good' } }
+  const open = (changes: object) => {
+    vi.spyOn(gateway, 'getRun').mockResolvedValue({ ...run, ...changes } as never)
+    view(<RunPage />)
+  }
+
+  it('leaves an upcoming run', async () => {
+    const toggle = vi.spyOn(gateway, 'toggleRun').mockResolvedValue(undefined as never)
+    open({})
+    await userEvent.click(await screen.findByRole('button', { name: 'Leave run' }))
+    await waitFor(() => expect(toggle).toHaveBeenCalledWith('run', false))
+  })
+
+  it('shows why the service refused', async () => {
+    vi.spyOn(gateway, 'toggleRun').mockRejectedValue(new ApiError('Run is full', 409))
+    open({ joined: false })
+    await userEvent.click(await screen.findByRole('button', { name: 'Join run' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Run is full')
+  })
+
+  it('offers no leave button to the organizer', async () => {
+    open({ organizer: 'You' })
+    expect(await screen.findByText('You’re organizing this run')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Leave run' })).not.toBeInTheDocument()
+  })
+
+  it('leaves past runs out of the runs list', async () => {
+    vi.spyOn(gateway, 'getRuns').mockResolvedValue([{ ...run, id: 'next', title: 'Upcoming 5K' }, { ...run, id: 'old', title: 'Finished 5K', startsAt: '2020-01-01T11:00:00Z' }] as never)
+    view(<RunsPage />)
+    expect(await screen.findByText('Upcoming 5K')).toBeInTheDocument()
+    expect(screen.queryByText('Finished 5K')).not.toBeInTheDocument()
+  })
+
+  it('closes joining and leaving once the run has started', async () => {
+    open({ startsAt: '2020-01-01T11:00:00Z' })
+    expect(await screen.findByText('This run has started')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Leave run' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Go to Activity' })).toHaveAttribute('href', '/activity')
   })
 })
 

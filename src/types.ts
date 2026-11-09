@@ -61,6 +61,7 @@ export interface Run {
   weather: Weather
   joined?: boolean
   status?: string
+  startsAt?: string
   participantIds?: string[]
   confirmedIds?: string[]
 }

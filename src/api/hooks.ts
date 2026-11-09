@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { gateway } from './gateway'
-import type { CreateRunInput, RunnerFilters } from '../types'
+import type { CreateRunInput, Run, RunnerFilters } from '../types'
 
 export const useDashboard = () => useQuery({ queryKey: ['dashboard'], queryFn: gateway.getDashboard })
 export const useRunners = (filters: RunnerFilters) => useQuery({ queryKey: ['runners', filters], queryFn: () => gateway.getRunners(filters) })
 export const useRunner = (id: string) => useQuery({ queryKey: ['runner', id], queryFn: () => gateway.getRunner(id) })
-export const useRuns = () => useQuery({ queryKey: ['runs'], queryFn: gateway.getRuns })
+// The API also returns past runs the caller took part in; Activity needs those, browsing does not.
+export const hasStarted = (run: Run) => !!run.startsAt && new Date(run.startsAt) <= new Date()
+export const useUpcomingRuns = () => useQuery({ queryKey: ['runs'], queryFn: gateway.getRuns, select: (runs: Run[]) => runs.filter((run) => !hasStarted(run)) })
 export const useRun = (id: string) => useQuery({ queryKey: ['run', id], queryFn: () => gateway.getRun(id) })
 export const useBuddyRequest = () => useMutation({ mutationFn: ({ runnerId, note }: { runnerId: string; note: string }) => gateway.sendBuddyRequest(runnerId, note) })
 export const useCreateRun = () => {

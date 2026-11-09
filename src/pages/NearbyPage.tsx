@@ -1,13 +1,13 @@
 import { lazy, Suspense, useMemo } from 'react'
 import { ArrowLeft, Crosshair, LocateFixed, MapPin, Navigation, Route } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useRuns } from '../api/hooks'
+import { useUpcomingRuns } from '../api/hooks'
 import { Button, Card, EmptyState } from '../components/ui'
 import { distanceKm, useCurrentLocation } from '../hooks/useCurrentLocation'
 const NearbyEventsMap = lazy(() => import('../components/NearbyEventsMap'))
 
 export default function NearbyPage() {
-  const location = useCurrentLocation(); const { data: runs = [] } = useRuns()
+  const location = useCurrentLocation(); const { data: runs = [] } = useUpcomingRuns()
   const distances = useMemo(() => location.coordinates ? Object.fromEntries(runs.map((run) => [run.id, distanceKm(location.coordinates!, { latitude: run.latitude, longitude: run.longitude })])) : {}, [location.coordinates, runs])
   const nearby = runs.filter((run) => distances[run.id] <= 1)
   return <div className="page"><Link className="back" to="/runs"><ArrowLeft size={17} /> Back to runs</Link><header className="page-title nearby-title"><div><span className="kicker">LIVE LOCAL DISCOVERY</span><h1>Who's nearby?</h1><p>Running events within 1 km of your current location.</p></div>{location.status === 'ready' && <Button variant="secondary" onClick={location.locate}><Crosshair size={17} /> Recenter</Button>}</header>
