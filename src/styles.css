@@ -242,3 +242,21 @@ input:focus, select:focus, textarea:focus { border-color:#60866f; }
   .activity-notification { flex-wrap:nowrap; }
   .activity-notification > .button { flex-shrink:0; }
 }
+
+/* Profile photo: the current avatar beside upload/remove actions, above the profile form. */
+.profile-photo { display:flex; align-items:center; gap:22px; padding:24px 30px; margin-bottom:18px; }
+.profile-photo h2 { margin:0 0 4px; font-size:1.1rem; }
+.profile-photo p { margin:0; color:var(--muted); font-size:.85rem; }
+.profile-photo-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+.profile-photo [role="status"] { margin-top:10px; }
+.profile-photo-hint { margin:0 0 18px; color:var(--muted); font-size:.85rem; }
+@media (max-width: 640px) {
+  .profile-photo { flex-direction:column; align-items:flex-start; padding:22px 18px; }
+}
+.photo-picker { position:relative; cursor:pointer; }
+.photo-picker:focus-within { outline:2px solid var(--ink); outline-offset:2px; }
+.photo-picker.is-busy { opacity:.58; cursor:not-allowed; transform:none; }
+
+/* Actions under an empty state's text get room to breathe, centred like the text above them. */
+.empty > .button-row, .empty > a, .empty > .button { margin-top:16px; }
+.empty > .button-row { justify-content:center; flex-wrap:wrap; }

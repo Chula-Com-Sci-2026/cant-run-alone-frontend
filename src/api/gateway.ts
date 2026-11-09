@@ -64,6 +64,15 @@ export const gateway = {
   async logout() { await request('/auth/logout', { method: 'POST' }); accessToken = null },
   getMyProfile: () => request<MyProfile>('/me/profile'),
   saveProfile: (input: { name: string; bio: string; paceMin: number; paceMax: number; experience: string; area: string; availability: string; latitude: number; longitude: number }) => request<MyProfile>('/me/profile', { method: 'PUT', body: JSON.stringify(input) }),
+  // Profile's photo handshake (profile.openapi.json): ask for a signed upload URL, PUT the image
+  // straight to photo storage with no token, then attach the key. The gateway never sees the bytes.
+  async uploadPhoto(file: File) {
+    const upload = await request<{ uploadUrl: string; photoRef: string }>('/me/profile/photo-uploads', { method: 'POST' })
+    const stored = await fetch(upload.uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type }, signal: AbortSignal.timeout(60_000) })
+    if (!stored.ok) throw new ApiError('The photo could not be uploaded. Please try again.', stored.status)
+    return request<MyProfile>('/me/profile/photo', { method: 'PUT', body: JSON.stringify({ photoRef: upload.photoRef }) })
+  },
+  removePhoto: () => request<MyProfile>('/me/profile/photo', { method: 'DELETE' }),
   getBuddyRequests: () => request<BuddyRequest[]>('/buddy-requests'),
   respondToBuddyRequest: (id: string, decision: string) => request(`/buddy-requests/${id}`, { method: 'PATCH', body: JSON.stringify({ decision }) }),
   getNotifications: () => request<NotificationPage>('/notifications'),
