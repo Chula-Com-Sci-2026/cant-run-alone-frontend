@@ -256,3 +256,7 @@ input:focus, select:focus, textarea:focus { border-color:#60866f; }
 .photo-picker { position:relative; cursor:pointer; }
 .photo-picker:focus-within { outline:2px solid var(--ink); outline-offset:2px; }
 .photo-picker.is-busy { opacity:.58; cursor:not-allowed; transform:none; }
+
+/* Actions under an empty state's text get room to breathe, centred like the text above them. */
+.empty > .button-row, .empty > a, .empty > .button { margin-top:16px; }
+.empty > .button-row { justify-content:center; flex-wrap:wrap; }
