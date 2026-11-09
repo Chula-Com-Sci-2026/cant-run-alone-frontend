@@ -123,6 +123,7 @@ describe('delivery 4 user flows', () => {
     view(<ActivityPage />)
     await userEvent.click(await screen.findByRole('button', { name: 'Accept request' }))
     expect(accept).toHaveBeenCalledWith('request', 'accepted')
+    expect(screen.queryByRole('heading', { name: 'Notifications' })).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Confirm attendance' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Only participants can confirm attendance')
   })

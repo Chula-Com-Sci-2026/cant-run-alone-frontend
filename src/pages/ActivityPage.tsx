@@ -165,8 +165,9 @@ export default function ActivityPage() {
     {[requests, notifications, history, runs, me].some(query => query.isError) && <p role="alert">Some activity could not load. Check that you are signed in and the services are running.</p>}
     <h2>Buddy requests</h2>{requests.data?.length === 0 && <p>No requests yet. Find a runner on Discover to send one.</p>}
     {me.data && orderedRequests.map(request => <BuddyRequestRow key={request.id} request={request} myId={myId} />)}
-    <h2>Notifications</h2>{notifications.data?.items.length === 0 && <p>No notifications yet.</p>}
-    {notifications.data?.items.map(item => <NotificationRow key={item.id} item={item} busy={busy} onRead={() => void act(() => gateway.markNotificationRead(item.id))} />)}
+    {/* Only when there is something to read; an empty inbox adds nothing to this page. */}
+    {!!notifications.data?.items.length && <><h2>Notifications</h2>
+      {notifications.data.items.map(item => <NotificationRow key={item.id} item={item} busy={busy} onRead={() => void act(() => gateway.markNotificationRead(item.id))} />)}</>}
     <h2>After your run</h2>{runs.isSuccess && orderedRuns.length === 0 && <p>No finished runs yet.</p>}
     {me.data && orderedRuns.map(run => <PastRunCard key={run.id} run={run} myId={myId} record={recordFor(run.id)} />)}
     <h2>Running history</h2><p>{(history.data?.totalDistanceMeters ?? 0) / 1000} km · {Math.round((history.data?.totalDurationSeconds ?? 0) / 60)} minutes</p>{history.data?.records.map(record => <Card className="activity-record" key={record.id}><p>{record.distance_meters / 1000} km in {Math.round(record.duration_seconds / 60)} minutes · {new Date(record.occurred_at).toLocaleDateString()}</p></Card>)}
