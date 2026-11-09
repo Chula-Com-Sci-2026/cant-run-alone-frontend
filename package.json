@@ -19,7 +19,6 @@
     "i18next": "latest",
     "leaflet": "latest",
     "lucide-react": "latest",
-    "maplibre-gl": "^6.14.0",
     "react": "latest",
     "react-dom": "latest",
     "react-hook-form": "latest",
