@@ -65,7 +65,7 @@ describe('delivery 4 user flows', () => {
     vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray Attajak', photoUrl: null } as never)
     const upload = vi.spyOn(gateway, 'uploadPhoto').mockResolvedValue({ id: 'ray' } as never)
     view(<ProfilePage />)
-    expect(await screen.findByRole('button', { name: 'Upload photo' })).toBeInTheDocument()
+    expect(await screen.findByText('Upload photo')).toBeInTheDocument()
     const photo = new File(['jpeg'], 'me.jpg', { type: 'image/jpeg' })
     await userEvent.upload(screen.getByLabelText('Photo file'), photo)
     expect(await screen.findByText('Photo updated.')).toBeInTheDocument()

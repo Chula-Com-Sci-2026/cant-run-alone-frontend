@@ -1,5 +1,5 @@
 import type { ChangeEvent, FormEvent } from 'react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, gateway } from '../api/gateway'
@@ -15,7 +15,6 @@ export default function ProfilePage() {
   const [busy, setBusy] = useState(false)
   const [photoMessage, setPhotoMessage] = useState('')
   const [photoBusy, setPhotoBusy] = useState(false)
-  const photoInput = useRef<HTMLInputElement>(null)
   if (isPending) return <div className="page narrow"><Card className="empty"><p role="status">Loading your profile…</p></Card></div>
   if (error && !(error instanceof ApiError && error.status === 404)) return <div className="page narrow"><Card className="empty"><h2>Your profile couldn’t load.</h2><p role="alert">{error instanceof ApiError ? error.message : 'The service could not be reached. Your saved profile has not been changed.'}</p><Button onClick={() => void refetch()}>Try again</Button></Card></div>
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -48,8 +47,8 @@ export default function ProfilePage() {
     void changePhoto(() => gateway.uploadPhoto(file), 'Photo updated.')
   }
   return <div className="page narrow profile-editor"><header className="page-title"><div><span className="kicker">YOUR RUNNING IDENTITY</span><h1>Your runner profile</h1><p>Create or edit your profile before searching for buddies.</p></div></header>{profile && <Card className="profile-photo"><Avatar runner={profile} large /><div><h2>Profile photo</h2><p>Shown on your runner card. JPEG, PNG or WebP, up to 5 MB.</p><div className="profile-photo-actions">
-    <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label="Photo file" onChange={pickPhoto} hidden />
-    <Button type="button" disabled={photoBusy} onClick={() => photoInput.current?.click()}>{photoBusy ? 'Saving photo…' : profile.photoUrl ? 'Change photo' : 'Upload photo'}</Button>
+    {/* A label opens the picker natively in every browser; a script click on a display:none input does not (Safari). */}
+    <label className={`button button--primary photo-picker ${photoBusy ? 'is-busy' : ''}`}>{photoBusy ? 'Saving photo…' : profile.photoUrl ? 'Change photo' : 'Upload photo'}<input className="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Photo file" onChange={pickPhoto} disabled={photoBusy} /></label>
     {profile.photoUrl && <Button type="button" variant="secondary" disabled={photoBusy} onClick={() => void changePhoto(gateway.removePhoto, 'Photo removed.')}>Remove photo</Button>}
   </div>{photoMessage && <p role="status">{photoMessage}</p>}</div></Card>}
   {!profile && <p className="profile-photo-hint">Save your profile first, then you can add a photo.</p>}
