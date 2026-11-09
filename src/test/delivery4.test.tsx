@@ -12,7 +12,7 @@ import CreateRunPage from '../pages/CreateRunPage'
 import RunPage from '../pages/RunPage'
 import RunsPage from '../pages/RunsPage'
 
-vi.mock('../components/MeetingPointMap', () => ({ default: () => <div>Meeting point map</div> }))
+vi.mock('../components/MeetingPointMap', () => ({ default: ({ onChange }: { onChange: (latitude: number, longitude: number) => void }) => <button onClick={() => onChange(13.74, 100.55)}>Move pin</button> }))
 
 function view(element: React.ReactNode) {
   return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><MemoryRouter><Routes><Route path="/" element={element} /><Route path="/profile" element={<p>Profile setup</p>} /><Route path="/runs/:id" element={<p>Created run</p>} /></Routes></MemoryRouter></QueryClientProvider>)
@@ -145,6 +145,27 @@ describe('delivery 4 user flows', () => {
     expect(await screen.findByText('Rated Mali S. 5 out of 5.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Rate Mali S.' })).not.toBeInTheDocument()
   })
+  it('names the meeting point from the map pin', async () => {
+    const find = vi.spyOn(gateway, 'findPlaceName').mockResolvedValue('Benjakitti Park, Khlong Toei')
+    view(<CreateRunPage />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Move pin' }))
+    await waitFor(() => expect(screen.getByLabelText(/Public meeting point/)).toHaveValue('Benjakitti Park, Khlong Toei'), { timeout: 2500 })
+    expect(find).toHaveBeenCalledOnce()
+    expect(find.mock.calls[0].slice(0, 2)).toEqual([13.74, 100.55])
+  })
+
+  it('keeps what the runner types over a pending pin lookup', async () => {
+    const find = vi.spyOn(gateway, 'findPlaceName').mockResolvedValue('Somewhere else')
+    view(<CreateRunPage />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Move pin' }))
+    const field = screen.getByLabelText(/Public meeting point/)
+    await userEvent.clear(field)
+    await userEvent.type(field, 'Gate 5')
+    await new Promise(resolve => setTimeout(resolve, 1200))
+    expect(field).toHaveValue('Gate 5')
+    expect(find).not.toHaveBeenCalled()
+  })
+
   it('checks real gateway conditions before allowing run publication', async () => {
     const conditions = vi.spyOn(gateway, 'getConditions').mockResolvedValue({ temperature: 29, humidity: 60, rainChance: 10, pm25: 15, level: 'great', label: 'Great to run', updatedAt: 'Now' })
     const create = vi.spyOn(gateway, 'createRun').mockResolvedValue({ id: 'created' } as never)

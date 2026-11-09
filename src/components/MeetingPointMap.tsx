@@ -1,3 +1,4 @@
+import PinchZoomOnly from './PinchZoomOnly'
 import PlainMapLayer from './PlainMapLayer'
 import { MapContainer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
@@ -11,5 +12,5 @@ function Picker({ position, onChange }: { position: [number, number]; onChange: 
 }
 
 export default function MeetingPointMap({ latitude, longitude, onChange }: { latitude: number; longitude: number; onChange: (latitude: number, longitude: number) => void }) {
-  return <div className="meeting-picker"><MapContainer center={[latitude, longitude]} zoom={15} scrollWheelZoom className="map"><PlainMapLayer /><Picker position={[latitude, longitude]} onChange={onChange} /></MapContainer><p>Click the map to move the meeting pin. Use +/− or scroll to zoom.</p></div>
+  return <div className="meeting-picker"><MapContainer center={[latitude, longitude]} zoom={15} scrollWheelZoom className="map"><PinchZoomOnly /><PlainMapLayer /><Picker position={[latitude, longitude]} onChange={onChange} /></MapContainer><p>Click the map to move the meeting pin. Use +/− or pinch to zoom.</p></div>
 }

@@ -52,6 +52,18 @@ export interface RunningRecord { id: string; run_id: string; distance_meters: nu
 export interface History { records: RunningRecord[]; totalDistanceMeters: number; totalDurationSeconds: number }
 
 export const gateway = {
+  // The place name at a map pin, from OpenStreetMap's public Nominatim service (like the map tiles, an
+  // external system the browser calls directly). Null when the pin has no usable name. Its usage policy
+  // allows one request a second, so callers must debounce.
+  async findPlaceName(latitude: number, longitude: number, language: string, signal: AbortSignal) {
+    if (USE_MOCK_API) return null
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&accept-language=${language}`, { signal })
+    if (!response.ok) return null
+    const place = await response.json() as { name?: string; address?: Record<string, string> }
+    const { road, pedestrian, footway, neighbourhood, quarter, suburb, city } = place.address ?? {}
+    const parts = [place.name, road ?? pedestrian ?? footway, neighbourhood ?? quarter, suburb, city].filter(Boolean)
+    return [...new Set(parts)].slice(0, 2).join(', ') || null
+  },
   getConditions: (input: CreateRunInput) => request<Weather>(`/conditions?latitude=${input.latitude}&longitude=${input.longitude}&at=${encodeURIComponent(`${input.date}T${input.time}:00+07:00`)}`),
   async register(input: { email: string; password: string; phoneNumber: string; pdpaConsent: boolean }) {
     return request<{ registrationId: string; maskedPhone: string; deliveryAdapter: string }>('/auth/register', { method: 'POST', body: JSON.stringify(input) }, false)
