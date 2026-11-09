@@ -1,13 +1,13 @@
 import { TileLayer } from 'react-leaflet'
 
-// The map wrapper's tile provider (ADR 0011). Esri's Light Gray Canvas base has no labels or points
-// of interest, so streets, parks and water read at a glance and pins stand out, and it needs no API
-// key. Leaflet draws the tiles itself, so they move and zoom in step with the markers.
+// The map wrapper's tile provider (ADR 0011): OpenStreetMap's standard tiles. Fine for the demo; the
+// public tile server's usage policy rules out heavy traffic, so production needs its own provider,
+// which is a change to this file only. Leaflet draws the tiles itself, so they move and zoom in step
+// with the markers.
 export default function PlainMapLayer() {
   return <TileLayer
-    url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-    maxZoom={18}
-    maxNativeZoom={16}
-    attribution='Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors'
+    url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    maxZoom={19}
+    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   />
 }
