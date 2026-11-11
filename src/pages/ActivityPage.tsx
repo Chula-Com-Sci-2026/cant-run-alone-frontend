@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
-import { Check } from 'lucide-react'
+import { Check, Footprints } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, gateway } from '../api/gateway'
 import type { BuddyRequest, Notification, RunningRecord } from '../api/gateway'
-import { Avatar, Button, Card, Status } from '../components/ui'
+import { Avatar, Button, Card, EmptyState, Status } from '../components/ui'
 import type { Run } from '../types'
 
 type Feedback = { tone: 'success' | 'danger'; text: string }
@@ -51,7 +52,7 @@ function BuddyRequestRow({ request, myId }: { request: BuddyRequest; myId: strin
     : incoming ? <Status tone="warning">Needs your answer</Status> : <Status tone="neutral">Sent</Status>
   return <Card className="activity-person">
     <Avatar runner={runner} />
-    <div className="activity-person__text"><p>{sentence}</p>{chip}{error && <p role="alert" className="run-feedback run-feedback--danger">{error}</p>}</div>
+    <div className="activity-person__text"><p>{sentence}</p>{request.status === 'pending' && request.note && <blockquote className="request-note">{request.note}</blockquote>}{chip}{error && <p role="alert" className="run-feedback run-feedback--danger">{error}</p>}</div>
     {incoming && request.status === 'pending' && <div className="activity-person__actions"><Button disabled={busy} onClick={() => void respond('accepted')}>Accept request</Button><Button variant="secondary" disabled={busy} onClick={() => void respond('rejected')}>Decline</Button></div>}
   </Card>
 }
@@ -160,17 +161,21 @@ export default function ActivityPage() {
   const finished = (run: Run) => Boolean(run.confirmedIds?.includes(myId) && run.status === 'completed' && recordFor(run.id))
   const orderedRuns = [...pastRuns].sort((a, b) => Number(finished(a)) - Number(finished(b))
     || `${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`) || a.id.localeCompare(b.id))
+  // A brand-new runner gets one way in instead of a column of empty headings.
+  const nothingYet = [requests, notifications, history, runs, me].every(query => query.isSuccess)
+    && !requests.data?.length && !notifications.data?.items.length && !orderedRuns.length && !history.data?.records.length
 
   return <div className="page narrow activity-page"><header className="page-title"><div><span className="kicker">KEEP YOUR MOMENTUM</span><h1>Your activity</h1><p>Catch up with your buddies and celebrate every run.</p></div></header>{message && <p role="alert">{message}</p>}
     {[requests, notifications, history, runs, me].some(query => query.isError) && <p role="alert">Some activity could not load. Check that you are signed in and the services are running.</p>}
-    <h2>Buddy requests</h2>{requests.data?.length === 0 && <p>No requests yet. Find a runner on Discover to send one.</p>}
+    {nothingYet ? <EmptyState icon={<Footprints />} title="Your running story starts here" text="Buddy requests, notifications and your finished runs will show up here. Find someone at your pace or join a run to get going." action={<div className="button-row"><Link to="/discover"><Button>Find a runner</Button></Link><Link to="/runs"><Button variant="secondary">Browse runs</Button></Link></div>} /> : <>
+    <h2>Buddy requests</h2>{requests.data?.length === 0 && <p className="section-empty">No requests yet. Find a runner on <Link to="/discover">Discover</Link> to send one.</p>}
     {me.data && orderedRequests.map(request => <BuddyRequestRow key={request.id} request={request} myId={myId} />)}
     {/* Only when there is something to read; an empty inbox adds nothing to this page. */}
     {!!notifications.data?.items.length && <><h2>Notifications</h2>
       {notifications.data.items.map(item => <NotificationRow key={item.id} item={item} busy={busy} onRead={() => void act(() => gateway.markNotificationRead(item.id))} />)}</>}
-    <h2>After your run</h2>{runs.isSuccess && orderedRuns.length === 0 && <p>No finished runs yet.</p>}
+    <h2>After your run</h2>{runs.isSuccess && orderedRuns.length === 0 && <p className="section-empty">No finished runs yet. Runs you join appear here once they end.</p>}
     {me.data && orderedRuns.map(run => <PastRunCard key={run.id} run={run} myId={myId} record={recordFor(run.id)} />)}
     {/* Like notifications, only once a run is logged; "0 km · 0 minutes" says nothing. */}
-    {!!history.data?.records.length && <><h2>Running history</h2><p>{history.data.totalDistanceMeters / 1000} km · {Math.round(history.data.totalDurationSeconds / 60)} minutes</p>{history.data.records.map(record => <Card className="activity-record" key={record.id}><p>{record.distance_meters / 1000} km in {Math.round(record.duration_seconds / 60)} minutes · {new Date(record.occurred_at).toLocaleDateString()}</p></Card>)}</>}
+    {!!history.data?.records.length && <><h2>Running history</h2><p>{history.data.totalDistanceMeters / 1000} km · {Math.round(history.data.totalDurationSeconds / 60)} minutes</p>{history.data.records.map(record => <Card className="activity-record" key={record.id}><p>{record.distance_meters / 1000} km in {Math.round(record.duration_seconds / 60)} minutes · {new Date(record.occurred_at).toLocaleDateString()}</p></Card>)}</>}</>}
   </div>
 }
