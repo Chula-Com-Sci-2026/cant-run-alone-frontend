@@ -21,6 +21,8 @@ h2 { letter-spacing: -.035em; }
 .sidebar nav a.active { color: var(--ink); background: var(--lime); font-weight: 750; }
 .sidebar__foot { display: grid; margin-top: auto; gap: 6px; border-top: 1px solid #2c3a34; padding-top: 12px; }
 .bottom-nav { display: none; }
+.nav-badge { min-width:21px; height:21px; margin-left:auto; padding:0 6px; display:inline-grid; place-items:center; color:#fff; background:#e5484d; border-radius:999px; font-size:.7rem; font-weight:800; line-height:1; box-shadow:0 0 0 2px #101d19; }
+.bottom-nav a { position:relative; }.bottom-nav .nav-badge { position:absolute; top:3px; left:calc(50% + 4px); min-width:17px; height:17px; padding:0 4px; font-size:.6rem; }
 .main { min-height: 100vh; }
 .page { max-width: 1280px; margin: 0 auto; padding: 46px clamp(24px, 5vw, 72px) 90px; }
 .page.narrow { max-width: 960px; }

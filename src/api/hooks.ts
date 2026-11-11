@@ -18,3 +18,15 @@ export const useToggleRun = () => {
   const client = useQueryClient()
   return useMutation({ mutationFn: ({ id, join }: { id: string; join: boolean }) => gateway.toggleRun(id, join), onSuccess: (_, variables) => { client.invalidateQueries({ queryKey: ['runs'] }); client.invalidateQueries({ queryKey: ['run', variables.id] }) } })
 }
+
+// What the Activity tab badge counts: incoming requests still waiting for my answer, plus unread
+// notifications about anything else. A request and its "sent you a request" notification count once.
+// The query keys are Activity's own, so its actions refresh the badge too.
+export function useActivityCount() {
+  const me = useQuery({ queryKey: ['me'], queryFn: gateway.getMyProfile })
+  const requests = useQuery({ queryKey: ['requests'], queryFn: gateway.getBuddyRequests, refetchInterval: 10000 })
+  const notifications = useQuery({ queryKey: ['notifications'], queryFn: gateway.getNotifications, refetchInterval: 10000 })
+  const waiting = new Set((requests.data ?? []).filter((request) => request.status === 'pending' && request.recipientId === me.data?.id).map((request) => request.id))
+  const unread = (notifications.data?.items ?? []).filter((item) => !item.readAt && !waiting.has(item.data.requestId))
+  return waiting.size + unread.length
+}
