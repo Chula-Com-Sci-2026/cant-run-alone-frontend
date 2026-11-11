@@ -44,7 +44,8 @@ async function request<T>(path: string, init?: RequestInit, retry = true): Promi
   return response.json() as Promise<T>
 }
 
-export interface BuddyRequest { id: string; senderId: string; recipientId: string; status: string }
+/** buddy_discovery.proto BuddyRequest. The note is absent when the sender wrote none. */
+export interface BuddyRequest { id: string; senderId: string; recipientId: string; status: string; note?: string }
 /** running-buddy-contracts notification.openapi.json: NotificationPublic and NotificationsPublic. */
 export interface Notification { id: string; type: string; category: string; data: { requestId: string; senderId: string; recipientId: string; status: string }; occurredAt: string; readAt: string | null }
 export interface NotificationPage { items: Notification[]; unreadCount: number; nextCursor: string | null }

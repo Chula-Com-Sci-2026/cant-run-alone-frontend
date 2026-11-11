@@ -116,14 +116,15 @@ describe('delivery 4 user flows', () => {
 
   it('accepts incoming buddy requests and reports a failed attendance confirmation', async () => {
     vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'me' } as never)
-    vi.spyOn(gateway, 'getBuddyRequests').mockResolvedValue([{ id: 'request', senderId: 'buddy', recipientId: 'me', status: 'pending' }])
+    vi.spyOn(gateway, 'getBuddyRequests').mockResolvedValue([{ id: 'request', senderId: 'buddy', recipientId: 'me', status: 'pending', note: 'Evening 5K this week?' }])
     vi.spyOn(gateway, 'getNotifications').mockResolvedValue({ items: [], unreadCount: 0, nextCursor: null })
     vi.spyOn(gateway, 'getHistory').mockResolvedValue({ records: [], totalDistanceMeters: 0, totalDurationSeconds: 0 })
     vi.spyOn(gateway, 'getRuns').mockResolvedValue([{ id: 'run', title: 'Past run', joined: true, date: '2020-01-01', time: '18:00', status: 'attendance_open' }] as never)
     const accept = vi.spyOn(gateway, 'respondToBuddyRequest').mockResolvedValue({})
     vi.spyOn(gateway, 'confirmAttendance').mockRejectedValue({ message: 'Only participants can confirm attendance' })
     view(<ActivityPage />)
-    await userEvent.click(await screen.findByRole('button', { name: 'Accept request' }))
+    expect(await screen.findByText('Evening 5K this week?')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Accept request' }))
     expect(accept).toHaveBeenCalledWith('request', 'accepted')
     expect(screen.queryByRole('heading', { name: 'Notifications' })).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Confirm attendance' }))

@@ -52,7 +52,7 @@ function BuddyRequestRow({ request, myId }: { request: BuddyRequest; myId: strin
     : incoming ? <Status tone="warning">Needs your answer</Status> : <Status tone="neutral">Sent</Status>
   return <Card className="activity-person">
     <Avatar runner={runner} />
-    <div className="activity-person__text"><p>{sentence}</p>{chip}{error && <p role="alert" className="run-feedback run-feedback--danger">{error}</p>}</div>
+    <div className="activity-person__text"><p>{sentence}</p>{request.status === 'pending' && request.note && <blockquote className="request-note">{request.note}</blockquote>}{chip}{error && <p role="alert" className="run-feedback run-feedback--danger">{error}</p>}</div>
     {incoming && request.status === 'pending' && <div className="activity-person__actions"><Button disabled={busy} onClick={() => void respond('accepted')}>Accept request</Button><Button variant="secondary" disabled={busy} onClick={() => void respond('rejected')}>Decline</Button></div>}
   </Card>
 }
