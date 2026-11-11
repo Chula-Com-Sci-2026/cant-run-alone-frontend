@@ -82,8 +82,15 @@ img.avatar { object-fit:cover; }
 .text-link { display:flex; align-items:center; justify-content:space-between; padding-top:13px; border-top:1px solid var(--line); color:var(--green); font-weight:750; font-size:.8rem; }
 .skeleton { height:210px; border-radius:20px; background:linear-gradient(90deg,#e5e9e3 25%,#f4f6f2 50%,#e5e9e3 75%); background-size:200% 100%; animation:shimmer 1.3s infinite; }
 @keyframes shimmer { to { background-position:-200% 0; } }
-.filters { display:flex; gap:13px; align-items:center; flex-wrap:wrap; padding:15px; background:#e7ebe5; border-radius:15px; margin-bottom:23px; }
-.filters label { display:flex; align-items:center; gap:8px; font-size:.76rem; font-weight:700; }
+.filters { display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:10px 14px 10px 10px; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 30px #263b3110; margin-bottom:23px; }
+.filters > svg { color:var(--muted); }
+.filters label { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:.76rem; font-weight:700; }
+.filters select { appearance:none; -webkit-appearance:none; min-height:40px; padding:0 34px 0 14px; color:var(--ink); font-size:.82rem; font-weight:700; border:1px solid transparent; border-radius:999px; background:#eef2ec url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23176b4d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center / 14px; cursor:pointer; transition:border-color .15s, background-color .15s; }
+.filters select:hover { border-color:#cbd3cc; background-color:#e7ece4; }
+.filter-search { position:relative; flex:1 1 260px; }
+.filter-search svg { position:absolute; left:14px; color:var(--muted); pointer-events:none; }
+.filter-search input { min-height:44px; padding-left:42px; color:var(--ink); font-size:.9rem; font-weight:500; border-color:transparent; border-radius:11px; background:#f4f6f2; }
+.filter-search input:focus { border-color:#60866f; background:#fff; }
 input, select, textarea { width:100%; min-height:44px; padding:0 12px; color:var(--ink); background:#fff; border:1px solid #cbd3cc; border-radius:9px; }
 textarea { padding:12px; min-height:95px; resize:vertical; }
 select { width:auto; }

@@ -30,6 +30,19 @@ describe('core frontend flows', () => {
     expect(await screen.findByText('Narin K.')).toBeInTheDocument()
   })
 
+  it('narrows discovery results by name', async () => {
+    renderApp('/discover')
+    expect(await screen.findByText('Pim C.')).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText('Search runners by name'), 'nar')
+    expect(screen.getByText('Narin K.')).toBeInTheDocument()
+    expect(screen.queryByText('Pim C.')).not.toBeInTheDocument()
+    await userEvent.clear(screen.getByLabelText('Search runners by name'))
+    await userEvent.type(screen.getByLabelText('Search runners by name'), 'zz')
+    expect(screen.getByText('No runner named “zz”')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Clear search' }))
+    expect(screen.getByText('Pim C.')).toBeInTheDocument()
+  })
+
   it('shows a runner card from the public profile fields', async () => {
     renderApp('/discover')
     expect(await screen.findByText('Mali S.')).toBeInTheDocument()
