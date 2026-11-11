@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { ArrowRight, LockKeyhole, Zap } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { gateway } from '../api/gateway'
-import { Button, Card } from '../components/ui'
+import AuthStory from '../components/AuthStory'
+import { Button } from '../components/ui'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -28,8 +30,13 @@ export default function RegisterPage() {
       setError((failure as { message?: string }).message ?? 'Registration failed. Please try again.')
     } finally { setBusy(false) }
   }
-  return <main className="page narrow"><Link to="/login">Back to sign in</Link><h1>{registrationId ? 'Verify your phone' : 'Create your account'}</h1><Card><form key={registrationId || 'register'} onSubmit={submit}>
-    {registrationId ? <><p>Phone: {maskedPhone}</p><p>The local console adapter prints your code in the Identity service logs. This demo does not send an SMS.</p><label>Verification code<input name="code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required /></label></> : <><label>Email<input name="email" type="email" required /></label><label>Thai mobile number<input name="phone" type="tel" placeholder="+66812345678" pattern="\+66[0-9]{9}" required /></label><label>Password<input name="password" type="password" minLength={8} maxLength={128} required /></label><label className="check"><input name="consent" type="checkbox" required /> I consent to the use of my profile and location for this service.</label></>}
-    {error && <p role="alert" className="form-error">{error}</p>}<Button disabled={busy}>{busy ? 'Please wait…' : registrationId ? 'Verify phone' : 'Send verification code'}</Button>
-  </form></Card></main>
+  return <div className="auth-page"><AuthStory /><main className="auth-form"><div><span className="mobile-logo"><Zap fill="currentColor" /> CAN'T RUN ALONE</span>
+    <h2>{registrationId ? 'Verify your phone' : 'Create your account'}</h2><p>{registrationId ? <>We sent a 6-digit code to <strong>{maskedPhone}</strong>.</> : 'Find runners who match your pace.'}</p>
+    <form key={registrationId || 'register'} onSubmit={submit}>
+      {registrationId ? <label>Verification code<input name="code" className="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required /></label> : <><label>Email<input name="email" type="email" autoComplete="email" required /></label><label>Thai mobile number<input name="phone" type="tel" autoComplete="tel" placeholder="+66812345678" pattern="\+66[0-9]{9}" required /></label><label>Password<div className="input-icon"><LockKeyhole size={17} /><input name="password" type="password" autoComplete="new-password" minLength={8} maxLength={128} required /></div></label><label className="check consent"><input name="consent" type="checkbox" required /> I consent to the use of my profile and location for this service.</label></>}
+      {error && <p role="alert" className="form-error">{error}</p>}<Button className="wide" disabled={busy}>{busy ? 'Please wait…' : registrationId ? 'Verify phone' : <>Send verification code <ArrowRight size={17} /></>}</Button>
+    </form>
+    <div className="auth-links"><span>Already have an account? <Link to="/login">Sign in</Link></span></div>
+    {registrationId && <p className="demo-note">Local demo: no SMS is sent. The code is printed in the Identity service log.</p>}
+  </div></main></div>
 }
