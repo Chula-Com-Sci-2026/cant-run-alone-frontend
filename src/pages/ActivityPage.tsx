@@ -170,6 +170,7 @@ export default function ActivityPage() {
       {notifications.data.items.map(item => <NotificationRow key={item.id} item={item} busy={busy} onRead={() => void act(() => gateway.markNotificationRead(item.id))} />)}</>}
     <h2>After your run</h2>{runs.isSuccess && orderedRuns.length === 0 && <p>No finished runs yet.</p>}
     {me.data && orderedRuns.map(run => <PastRunCard key={run.id} run={run} myId={myId} record={recordFor(run.id)} />)}
-    <h2>Running history</h2><p>{(history.data?.totalDistanceMeters ?? 0) / 1000} km · {Math.round((history.data?.totalDurationSeconds ?? 0) / 60)} minutes</p>{history.data?.records.map(record => <Card className="activity-record" key={record.id}><p>{record.distance_meters / 1000} km in {Math.round(record.duration_seconds / 60)} minutes · {new Date(record.occurred_at).toLocaleDateString()}</p></Card>)}
+    {/* Like notifications, only once a run is logged; "0 km · 0 minutes" says nothing. */}
+    {!!history.data?.records.length && <><h2>Running history</h2><p>{history.data.totalDistanceMeters / 1000} km · {Math.round(history.data.totalDurationSeconds / 60)} minutes</p>{history.data.records.map(record => <Card className="activity-record" key={record.id}><p>{record.distance_meters / 1000} km in {Math.round(record.duration_seconds / 60)} minutes · {new Date(record.occurred_at).toLocaleDateString()}</p></Card>)}</>}
   </div>
 }
