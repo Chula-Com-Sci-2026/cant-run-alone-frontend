@@ -19,7 +19,12 @@ export default function App() {
   const navigate = useNavigate()
   const client = useQueryClient()
   useEffect(() => {
-    const expired = () => { client.clear(); navigate('/login', { replace: true }) }
+    // Remember where the runner was going (an invitation link, say) so signing in leads back there.
+    const expired = () => {
+      const target = window.location.pathname + window.location.search
+      if (!['/login', '/register'].includes(window.location.pathname)) { try { window.sessionStorage.setItem('returnTo', target) } catch { /* storage blocked: land on Home */ } }
+      client.clear(); navigate('/login', { replace: true })
+    }
     window.addEventListener('auth:expired', expired)
     return () => window.removeEventListener('auth:expired', expired)
   }, [client, navigate])

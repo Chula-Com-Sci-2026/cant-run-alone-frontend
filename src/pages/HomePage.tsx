@@ -4,6 +4,7 @@ import { ApiError } from '../api/gateway'
 import { useTranslation } from 'react-i18next'
 import { useDashboard } from '../api/hooks'
 import { Button, Card, EmptyState, LoadingCards, RunnerCard, WeatherStrip } from '../components/ui'
+import BuddyActivity from '../components/BuddyActivity'
 
 export default function HomePage() {
   const { t } = useTranslation()
@@ -21,6 +22,8 @@ export default function HomePage() {
         <div className="run-meta"><span><CalendarDays size={16} /> {run.time} ICT</span><span><Route size={16} /> {run.distanceKm} km · {run.pace} min/km</span><span>{run.participants}/{run.participantLimit} runners</span></div><WeatherStrip weather={run.weather} />
       </div>
     </Card> : <EmptyState icon={<CalendarDays />} title="No upcoming runs yet" text="Join a group run nearby or set one up and invite a buddy." action={<div className="button-row"><Link to="/runs"><Button variant="secondary">Browse runs</Button></Link><Link to="/runs/new"><Button>Create a run</Button></Link></div>} />}
+    <section className="section-heading"><div><span className="kicker">YOUR BUDDIES</span><h2>Buddy activity</h2></div><Link to="/activity">{t('seeAll')} <ArrowRight size={16} /></Link></section>
+    <BuddyActivity limit={3} />
     <section className="section-heading"><div><span className="kicker">SMART MATCHING</span><h2>{t('suggested')}</h2></div><Link to="/discover">{t('seeAll')} <ArrowRight size={16} /></Link></section>
     {data.suggestedRunners.length ? <div className="card-grid">{data.suggestedRunners.map((runner) => <RunnerCard key={runner.id} runner={runner} action={<Link className="text-link" to={`/discover/${runner.id}`}>View profile <ArrowRight size={15} /></Link>} />)}</div>
       : <EmptyState icon={<Users />} title="No matches to show yet" text="Search runners near you by pace and area to find a buddy." action={<Link to="/discover"><Button>Find a buddy</Button></Link>} />}
