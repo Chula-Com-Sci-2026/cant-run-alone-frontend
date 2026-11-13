@@ -155,6 +155,16 @@ describe('buddy activity', () => {
     expect(screen.getByText(/became running buddies/)).toBeInTheDocument()
   })
 
+  it('lets the sender cancel a request that is still pending', async () => {
+    stub({ requests: [{ id: 'waiting', senderId: 'me', recipientId: 'narin', status: 'pending' }] })
+    vi.spyOn(gateway, 'getNotifications').mockResolvedValue({ items: [], unreadCount: 0, nextCursor: null })
+    vi.spyOn(gateway, 'getHistory').mockResolvedValue({ records: [], totalDistanceMeters: 0, totalDurationSeconds: 0 })
+    const cancel = vi.spyOn(gateway, 'cancelBuddyRequest').mockResolvedValue(undefined as never)
+    view('/activity')
+    await userEvent.click(await screen.findByRole('button', { name: 'Cancel request' }))
+    await waitFor(() => expect(cancel).toHaveBeenCalledWith('waiting'))
+  })
+
   it('remembers a rating after the page is opened again', async () => {
     stub({ runs: [{ id: 'run', title: 'Past run', joined: true, date: '2020-01-01', time: '18:00', distanceKm: 5, status: 'completed', confirmedIds: ['me', 'mali'], participantIds: ['me', 'mali'] }] })
     vi.spyOn(gateway, 'getNotifications').mockResolvedValue({ items: [], unreadCount: 0, nextCursor: null })

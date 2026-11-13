@@ -50,11 +50,12 @@ function BuddyRequestRow({ request, myId }: { request: BuddyRequest; myId: strin
   const [error, setError] = useState('')
   const incoming = request.recipientId === myId
   const { name, runner } = useRunnerName(incoming ? request.senderId : request.recipientId)
-  const respond = async (decision: 'accepted' | 'rejected') => {
+  const run = async (operation: () => Promise<unknown>) => {
     setBusy(true)
     setError('')
-    try { await gateway.respondToBuddyRequest(request.id, decision); await client.invalidateQueries() } catch (failure) { setError((failure as { message?: string }).message ?? 'Could not answer this request.') } finally { setBusy(false) }
+    try { await operation(); await client.invalidateQueries() } catch (failure) { setError((failure as { message?: string }).message ?? 'Could not update this request.') } finally { setBusy(false) }
   }
+  const respond = (decision: 'accepted' | 'rejected') => run(() => gateway.respondToBuddyRequest(request.id, decision))
   const sentence = request.status === 'accepted' ? <>You and <strong>{name}</strong> are running buddies</>
     : request.status === 'rejected' ? (incoming ? <>You declined <strong>{name}</strong></> : <><strong>{name}</strong> declined your request</>)
     : incoming ? <><strong>{name}</strong> wants to run with you</> : <>Waiting for <strong>{name}</strong> to answer</>
@@ -64,6 +65,7 @@ function BuddyRequestRow({ request, myId }: { request: BuddyRequest; myId: strin
   return <Card className="activity-person">
     <Avatar runner={runner} />
     <div className="activity-person__text"><p>{sentence}</p>{request.status === 'pending' && request.note && <blockquote className="request-note">{request.note}</blockquote>}{chip}{error && <p role="alert" className="run-feedback run-feedback--danger">{error}</p>}</div>
+    {!incoming && request.status === 'pending' && <div className="activity-person__actions"><Button variant="secondary" disabled={busy} onClick={() => void run(() => gateway.cancelBuddyRequest(request.id))}>Cancel request</Button></div>}
     {incoming && request.status === 'pending' && <div className="activity-person__actions"><Button disabled={busy} onClick={() => void respond('accepted')}>Accept request</Button><Button variant="secondary" disabled={busy} onClick={() => void respond('rejected')}>Decline</Button></div>}
   </Card>
 }
