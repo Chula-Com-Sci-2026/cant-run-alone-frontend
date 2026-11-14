@@ -288,6 +288,34 @@ describe('leaving and joining a run', () => {
     expect(screen.queryByRole('button', { name: 'Leave run' })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Go to Activity' })).toHaveAttribute('href', '/activity')
   })
+
+  it('lets the organizer finish a started run', async () => {
+    const startedAt = new Date(Date.now() - 300000).toISOString()
+    const finish = vi.spyOn(gateway, 'finishRun').mockResolvedValue(undefined as never)
+    open({ organizer: 'You', startsAt: startedAt, endsAt: new Date(Date.now() + 3300000).toISOString() })
+    expect(await screen.findByText('Your run is underway')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Finish run' }))
+    await waitFor(() => expect(finish).toHaveBeenCalledWith('run'))
+  })
+
+  it('offers no finish button once the run has ended', async () => {
+    open({ organizer: 'You', startsAt: '2020-01-01T11:00:00Z', endsAt: '2020-01-01T11:20:00Z' })
+    expect(await screen.findByText('This run has started')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Finish run' })).not.toBeInTheDocument()
+  })
+
+  it('opens Activity for a run the organizer finished early', async () => {
+    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'me' } as never)
+    vi.spyOn(gateway, 'getBuddyRequests').mockResolvedValue([])
+    vi.spyOn(gateway, 'getNotifications').mockResolvedValue({ items: [], unreadCount: 0, nextCursor: null })
+    vi.spyOn(gateway, 'getHistory').mockResolvedValue({ records: [], totalDistanceMeters: 0, totalDurationSeconds: 0 } as never)
+    const now = new Date()
+    const local = new Date(now.getTime() + 7 * 3600000 - 600000).toISOString()
+    vi.spyOn(gateway, 'getRuns').mockResolvedValue([{ ...run, title: 'Demo run', date: local.slice(0, 10), time: local.slice(11, 16), startsAt: new Date(now.getTime() - 600000).toISOString(), endsAt: new Date(now.getTime() - 60000).toISOString(), status: 'scheduled', confirmedIds: [] }] as never)
+    view(<ActivityPage />)
+    expect(await screen.findByText('Demo run')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirm attendance' })).toBeInTheDocument()
+  })
 })
 
 describe('buddy requests and notifications', () => {

@@ -7,6 +7,9 @@ export const useRunners = (filters: RunnerFilters) => useQuery({ queryKey: ['run
 export const useRunner = (id: string) => useQuery({ queryKey: ['runner', id], queryFn: () => gateway.getRunner(id), enabled: Boolean(id) })
 // The API also returns past runs the caller took part in; Activity needs those, browsing does not.
 export const hasStarted = (run: Run) => !!run.startsAt && new Date(run.startsAt) <= new Date()
+// Older runs may not carry endsAt; Scheduling's default length is one hour.
+export const endsAt = (run: Run) => run.endsAt ? new Date(run.endsAt) : new Date(new Date(`${run.date}T${run.time}:00+07:00`).getTime() + 3600000)
+export const hasEnded = (run: Run) => endsAt(run) <= new Date()
 export const useUpcomingRuns = () => useQuery({ queryKey: ['runs'], queryFn: gateway.getRuns, select: (runs: Run[]) => runs.filter((run) => !hasStarted(run)) })
 export const useRun = (id: string) => useQuery({ queryKey: ['run', id], queryFn: () => gateway.getRun(id) })
 export const useMe = () => useQuery({ queryKey: ['me'], queryFn: gateway.getMyProfile })
@@ -40,6 +43,11 @@ export const useCreateRun = () => {
 export const useToggleRun = () => {
   const client = useQueryClient()
   return useMutation({ mutationFn: ({ id, join }: { id: string; join: boolean }) => gateway.toggleRun(id, join), onSuccess: (_, variables) => { client.invalidateQueries({ queryKey: ['runs'] }); client.invalidateQueries({ queryKey: ['run', variables.id] }) } })
+}
+// Finishing opens attendance, ratings and logging on Activity, so runs refresh everywhere.
+export const useFinishRun = () => {
+  const client = useQueryClient()
+  return useMutation({ mutationFn: (id: string) => gateway.finishRun(id), onSuccess: (_, id) => { client.invalidateQueries({ queryKey: ['runs'] }); client.invalidateQueries({ queryKey: ['run', id] }) } })
 }
 
 // What the Activity tab badge counts: incoming requests still waiting for my answer, plus unread

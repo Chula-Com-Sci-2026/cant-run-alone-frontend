@@ -62,6 +62,8 @@ export interface Run {
   joined?: boolean
   status?: string
   startsAt?: string
+  /** One hour after the start, or earlier once the organizer finishes the run. */
+  endsAt?: string
   /** Every run carries its organizer; participant ids are shown only to runners who joined. */
   organizerId?: string
   participantIds?: string[]
