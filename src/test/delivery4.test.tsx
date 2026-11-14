@@ -39,7 +39,7 @@ describe('delivery 4 user flows', () => {
 
   it('signs a runner with a profile in to Home', async () => {
     vi.spyOn(gateway, 'login').mockResolvedValue({ userId: 'ray', profileComplete: false } as never)
-    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray Attajak' } as never)
+    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray N.' } as never)
     render(<QueryClientProvider client={new QueryClient()}><MemoryRouter initialEntries={['/login']}><Routes><Route path="/login" element={<AuthPage />} /><Route path="/" element={<p>Home</p>} /><Route path="/profile" element={<p>Profile setup</p>} /></Routes></MemoryRouter></QueryClientProvider>)
     await userEvent.type(screen.getByLabelText('Email'), 'ray@example.com')
     await userEvent.type(screen.getByLabelText('Password'), 'runner123')
@@ -82,7 +82,7 @@ describe('delivery 4 user flows', () => {
   })
 
   it('uploads a profile photo through the photo handshake', async () => {
-    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray Attajak', photoUrl: null } as never)
+    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray N.', photoUrl: null } as never)
     const upload = vi.spyOn(gateway, 'uploadPhoto').mockResolvedValue({ id: 'ray' } as never)
     view(<ProfilePage />)
     expect(await screen.findByText('Upload photo')).toBeInTheDocument()
@@ -93,7 +93,7 @@ describe('delivery 4 user flows', () => {
   })
 
   it('rejects a photo over 5 MB before uploading', async () => {
-    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray Attajak', photoUrl: null } as never)
+    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray N.', photoUrl: null } as never)
     const upload = vi.spyOn(gateway, 'uploadPhoto')
     view(<ProfilePage />)
     const big = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'big.png', { type: 'image/png' })
@@ -103,7 +103,7 @@ describe('delivery 4 user flows', () => {
   })
 
   it('removes the current profile photo', async () => {
-    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray Attajak', photoUrl: 'http://127.0.0.1:9000/profile-service/photos/ray/1' } as never)
+    vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray N.', photoUrl: 'http://127.0.0.1:9000/profile-service/photos/ray/1' } as never)
     const remove = vi.spyOn(gateway, 'removePhoto').mockResolvedValue({ id: 'ray' } as never)
     view(<ProfilePage />)
     await userEvent.click(await screen.findByRole('button', { name: 'Remove photo' }))
@@ -124,12 +124,12 @@ describe('delivery 4 user flows', () => {
   it('offers retry instead of an empty editor after a profile request fails', async () => {
     vi.spyOn(gateway, 'getMyProfile')
       .mockRejectedValueOnce(new ApiError('Profile service unavailable', 503))
-      .mockResolvedValue({ id: 'ray', name: 'Ray Attajak' } as never)
+      .mockResolvedValue({ id: 'ray', name: 'Ray N.' } as never)
     view(<ProfilePage />)
     expect(await screen.findByRole('alert')).toHaveTextContent('Profile service unavailable')
     expect(screen.queryByLabelText('Display name')).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
-    expect(await screen.findByLabelText('Display name')).toHaveValue('Ray Attajak')
+    expect(await screen.findByLabelText('Display name')).toHaveValue('Ray N.')
   })
 
   it('accepts incoming buddy requests and reports a failed attendance confirmation', async () => {
