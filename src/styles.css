@@ -247,6 +247,9 @@ input:focus, select:focus, textarea:focus { border-color:#60866f; }
 .history-summary small { color:#b9c4bd; font-size:.64rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
 .history-summary strong { color:var(--lime); font-size:1.5rem; font-weight:800; line-height:1.1; }
 .history-summary strong span { color:#fff; font-size:.78rem; font-weight:600; }
+.meeting-card__pin { grid-column:1/-1; padding:0 20px 20px; }
+.meeting-card__pin .map { height:240px; border-radius:14px; }
+.meeting-card .text-link { display:inline-flex; margin-top:10px; padding:0; border:0; }
 .runner-stats { margin:16px 0; }
 .runner-stats h2 { margin:0 0 10px; font-size:1rem; font-weight:750; }
 .history-list { display:grid; gap:8px; margin-top:10px; }

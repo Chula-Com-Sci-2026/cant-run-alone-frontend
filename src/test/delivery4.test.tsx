@@ -270,6 +270,15 @@ describe('leaving and joining a run', () => {
     view(<RunPage />)
   }
 
+  it('shows the exact meeting pin only once the runner has joined', async () => {
+    open({ latitude: 13.7296, longitude: 100.5386 })
+    expect(await screen.findByRole('link', { name: 'Open in Google Maps' })).toHaveAttribute('href', 'https://www.google.com/maps/search/?api=1&query=13.7296,100.5386')
+    cleanup()
+    open({ joined: false, latitude: 13.73, longitude: 100.54 })
+    expect(await screen.findByText(/Join this run to see the exact pin/)).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Open in Google Maps' })).not.toBeInTheDocument()
+  })
+
   it('leaves an upcoming run', async () => {
     const toggle = vi.spyOn(gateway, 'toggleRun').mockResolvedValue(undefined as never)
     open({})
