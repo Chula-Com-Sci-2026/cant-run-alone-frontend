@@ -16,6 +16,7 @@ export const useMe = () => useQuery({ queryKey: ['me'], queryFn: gateway.getMyPr
 // Same keys as Activity and the tab badge, so sending, cancelling or answering refreshes all of them.
 export const useBuddyRequests = () => useQuery({ queryKey: ['requests'], queryFn: gateway.getBuddyRequests })
 export const useRatingSummary = (runnerId: string) => useQuery({ queryKey: ['rating-summary', runnerId], queryFn: () => gateway.getRatingSummary(runnerId), retry: false })
+export const useRunningSummary = (runnerId: string) => useQuery({ queryKey: ['running-summary', runnerId], queryFn: () => gateway.getRunningSummary(runnerId), retry: false })
 export const useBuddies = () => useQuery({ queryKey: ['buddies'], queryFn: gateway.getBuddies })
 // Profiles for a list of runner ids, sharing the ['runner', id] cache with every other screen. A hidden
 // or deleted profile fails on its own without breaking the list.

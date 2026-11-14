@@ -8,6 +8,8 @@ import { endsAt } from '../api/hooks'
 import type { BuddyRequest, History, Notification, RunningRecord } from '../api/gateway'
 import { Avatar, Button, Card, EmptyState, Status } from '../components/ui'
 import BuddyActivity from '../components/BuddyActivity'
+import RunningStats from '../components/RunningStats'
+import { km, minutes, pace } from '../components/running'
 import type { Run } from '../types'
 
 type Feedback = { tone: 'success' | 'danger'; text: string }
@@ -83,28 +85,12 @@ function NotificationRow({ item, busy, onRead }: { item: Notification; busy: boo
   </Card>
 }
 
-const km = (meters: number) => (meters / 1000).toLocaleString('en', { maximumFractionDigits: 2 })
-const minutes = (seconds: number) => {
-  const total = Math.round(seconds / 60)
-  return total < 60 ? `${total} min` : `${Math.floor(total / 60)} h ${total % 60} min`
-}
-// Minutes per kilometre as m:ss, rounded to whole seconds first so 5:59.6 reads 6:00, not 5:60.
-const pace = (meters: number, seconds: number) => {
-  const perKm = Math.round(seconds / (meters / 1000))
-  return `${Math.floor(perKm / 60)}:${String(perKm % 60).padStart(2, '0')}`
-}
-
 function RunningHistory({ history, runs }: { history: History; runs: Run[] }) {
   const title = (runId: string) => runs.find((run) => run.id === runId)?.title ?? 'Logged run'
   const records = [...history.records].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))
   return <>
     <h2>Running history</h2>
-    <Card className="history-summary">
-      <div><small>Distance</small><strong>{km(history.totalDistanceMeters)}<span> km</span></strong></div>
-      <div><small>Time</small><strong>{minutes(history.totalDurationSeconds)}</strong></div>
-      <div><small>Runs</small><strong>{records.length}</strong></div>
-      <div><small>Avg pace</small><strong>{pace(history.totalDistanceMeters, history.totalDurationSeconds)}<span> /km</span></strong></div>
-    </Card>
+    <RunningStats runs={records.length} distanceMeters={history.totalDistanceMeters} durationSeconds={history.totalDurationSeconds} />
     <div className="history-list">{records.map((record) => {
       const date = new Date(record.occurred_at)
       return <Card className="history-row" key={record.id}>

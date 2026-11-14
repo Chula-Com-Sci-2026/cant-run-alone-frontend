@@ -48,6 +48,7 @@ async function request<T>(path: string, init?: RequestInit, retry = true): Promi
 export interface BuddyRequest { id: string; senderId: string; recipientId: string; status: string; note?: string; createdAt?: string; updatedAt?: string }
 /** Reputation's rating summary. The average stays hidden (null) until three ratings exist. */
 export interface RatingSummary { runnerId: string; count: number; rating: number | null; hidden: boolean }
+export interface RunningSummary { runnerId: string; runs: number; totalDistanceMeters: number; totalDurationSeconds: number }
 /** running-buddy-contracts notification.openapi.json: NotificationPublic and NotificationsPublic. */
 export interface Notification { id: string; type: string; category: string; data: { requestId: string; senderId: string; recipientId: string; status: string }; occurredAt: string; readAt: string | null }
 export interface NotificationPage { items: Notification[]; unreadCount: number; nextCursor: string | null }
@@ -93,6 +94,7 @@ export const gateway = {
   async getBuddies(): Promise<string[]> { if (USE_MOCK_API) { await delay(); return [] } return request('/buddies') },
   cancelBuddyRequest: (id: string) => request(`/buddy-requests/${id}`, { method: 'DELETE' }),
   getRatingSummary: (runnerId: string) => request<RatingSummary>(`/runners/${runnerId}/rating-summary`),
+  getRunningSummary: (runnerId: string) => request<RunningSummary>(`/runners/${runnerId}/running-summary`),
   respondToBuddyRequest: (id: string, decision: string) => request(`/buddy-requests/${id}`, { method: 'PATCH', body: JSON.stringify({ decision }) }),
   getNotifications: () => request<NotificationPage>('/notifications'),
   markNotificationRead: (id: string) => request(`/notifications/${id}/read`, { method: 'PATCH' }),

@@ -89,6 +89,20 @@ describe('runner profile', () => {
     view('/discover/mali')
     expect(await screen.findByText('1 of 3 reviews so far')).toBeInTheDocument()
   })
+
+  it("shows a runner's running totals once they have logged a run", async () => {
+    stub()
+    const summary = vi.spyOn(gateway, 'getRunningSummary').mockResolvedValue({ runnerId: 'mali', runs: 3, totalDistanceMeters: 21000, totalDurationSeconds: 7560 })
+    view('/discover/mali')
+    expect(await screen.findByRole('heading', { name: "Mali S.'s running" })).toBeInTheDocument()
+    expect(screen.getByText('2 h 6 min')).toBeInTheDocument()
+    expect(screen.getByText('6:00')).toBeInTheDocument()
+    cleanup()
+    summary.mockResolvedValue({ runnerId: 'mali', runs: 0, totalDistanceMeters: 0, totalDurationSeconds: 0 })
+    view('/discover/mali')
+    expect(await screen.findByText('1 of 3 reviews so far')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: "Mali S.'s running" })).not.toBeInTheDocument()
+  })
 })
 
 describe('run participants and invitations', () => {

@@ -1,7 +1,8 @@
 import { ArrowLeft, CalendarClock, MapPin, ShieldCheck, Star, UserCheck } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { useState } from 'react'
-import { useAnswerBuddyRequest, useBuddies, useBuddyRequest, useBuddyRequests, useCancelBuddyRequest, useMe, useRatingSummary, useRunner, useUpcomingRuns } from '../api/hooks'
+import { useAnswerBuddyRequest, useBuddies, useBuddyRequest, useBuddyRequests, useCancelBuddyRequest, useMe, useRatingSummary, useRunner, useRunningSummary, useUpcomingRuns } from '../api/hooks'
+import RunningStats from '../components/RunningStats'
 import { ApiError } from '../api/gateway'
 import { Avatar, Button, Card, LoadingCards, Status } from '../components/ui'
 import { RunLine } from '../components/people'
@@ -48,11 +49,19 @@ function Reputation({ runner }: { runner: Runner }) {
   return <Card><Star /><small>REPUTATION</small><strong>{rating ? `${rating} / 5` : 'New runner'}</strong><span>{text}</span></Card>
 }
 
+// Their totals from Reputation; the runs behind them stay private. Nothing shows until one is logged.
+function RunningTotals({ runner }: { runner: Runner }) {
+  const { data: summary } = useRunningSummary(runner.id)
+  if (!summary?.runs) return null
+  return <section className="runner-stats"><h2>{runner.name}'s running</h2><RunningStats runs={summary.runs} distanceMeters={summary.totalDistanceMeters} durationSeconds={summary.totalDurationSeconds} /></section>
+}
+
 export default function RunnerPage() {
   const { id = '' } = useParams(); const { data: runner, isPending } = useRunner(id)
   if (isPending || !runner) return <div className="page"><LoadingCards /></div>
   return <div className="page narrow"><Link className="back" to="/discover"><ArrowLeft size={17} /> Back to discovery</Link><Card className="profile-hero"><Avatar runner={runner} large /><div><h1>{runner.name}</h1>{runner.bio && <p>{runner.bio}</p>}</div></Card>
     <div className="profile-facts"><Card><MapPin /><small>AREA</small><strong>{runner.area}</strong><span>Approximate area{runner.distanceKm !== undefined && ` · ${runner.distanceKm} km away`}</span></Card><Card><CalendarClock /><small>USUAL TIME</small><strong>{runner.availability ?? 'Not shared'}</strong><span>{paceLabel(runner.paceMin, runner.paceMax) ? `${paceLabel(runner.paceMin, runner.paceMax)} min/km` : 'Pace not shared'}</span></Card><Reputation runner={runner} /></div>
+    <RunningTotals runner={runner} />
     <BuddyBox runner={runner} />
   </div>
 }
