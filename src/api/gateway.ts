@@ -123,5 +123,12 @@ export const gateway = {
     mockRuns.unshift(run)
     return run
   },
+  async finishRun(id: string): Promise<Run> {
+    if (!USE_MOCK_API) return request(`/runs/${id}/finish`, { method: 'POST' })
+    await delay()
+    const run = mockRuns.find((item) => item.id === id) ?? mockRuns[0]
+    run.endsAt = new Date().toISOString()
+    return run
+  },
   async toggleRun(id: string, join: boolean) { if (USE_MOCK_API) { await delay(); const run = mockRuns.find((item) => item.id === id); if (run) { run.participants += join ? 1 : -1; run.joined = join }; return { id, joined: join } } return request(`/runs/${id}/participants/me`, { method: join ? 'PUT' : 'DELETE' }) },
 }

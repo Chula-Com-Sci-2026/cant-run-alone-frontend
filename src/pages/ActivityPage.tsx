@@ -4,6 +4,7 @@ import { Check, Footprints } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, gateway } from '../api/gateway'
+import { endsAt } from '../api/hooks'
 import type { BuddyRequest, Notification, RunningRecord } from '../api/gateway'
 import { Avatar, Button, Card, EmptyState, Status } from '../components/ui'
 import BuddyActivity from '../components/BuddyActivity'
@@ -169,7 +170,7 @@ export default function ActivityPage() {
   const orderedRequests = [...(requests.data ?? [])].sort((a, b) => requestRank(a) - requestRank(b) || a.id.localeCompare(b.id))
     .filter((request, index, list) => request.status !== 'accepted' || list.findIndex((other) => other.status === 'accepted' && otherRunner(other) === otherRunner(request)) === index)
   const recordFor = (runId: string) => history.data?.records.find((record) => record.run_id === runId)
-  const pastRuns = (runs.data ?? []).filter((run) => run.joined && new Date(`${run.date}T${run.time}:00+07:00`).getTime() + 3600000 <= now)
+  const pastRuns = (runs.data ?? []).filter((run) => run.joined && endsAt(run).getTime() <= now)
   // Runs that still need something come first, then newest first. The id breaks ties so a card
   // never jumps when the runs list comes back in a different order after an action.
   const finished = (run: Run) => Boolean(run.confirmedIds?.includes(myId) && run.status === 'completed' && recordFor(run.id))

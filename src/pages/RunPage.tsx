@@ -1,16 +1,19 @@
-import { ArrowLeft, CalendarDays, MapPin, Route, ShieldCheck, Users } from 'lucide-react'
+import { ArrowLeft, CalendarDays, Flag, MapPin, Route, ShieldCheck, Users } from 'lucide-react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { hasStarted, useRun, useToggleRun } from '../api/hooks'
+import { hasEnded, hasStarted, useFinishRun, useRun, useToggleRun } from '../api/hooks'
 import { Button, Card, LoadingCards, WeatherStrip } from '../components/ui'
 import { InviteBuddies, InvitedBanner, RunParticipants } from '../components/RunPeople'
 import type { Run } from '../types'
 
 // Offers only what Run Scheduling will accept: nobody joins or leaves once a run has started, and the
-// organizer stays with their run.
+// organizer stays with their run. Once it has started, the organizer can finish it early so everyone
+// can confirm attendance, rate and log the run without waiting out the hour.
 function RunMembership({ run }: { run: Run }) {
   const toggle = useToggleRun()
+  const finish = useFinishRun()
   const started = hasStarted(run)
-  if (started) return <Card className="join-card"><div><ShieldCheck /><h3>This run has started</h3><p>{run.joined ? 'Joining and leaving are closed. Confirm attendance, rate your buddy and log your run on Activity.' : 'Joining and leaving are closed.'}</p></div>{run.joined && <Link to="/activity"><Button variant="secondary">Go to Activity</Button></Link>}</Card>
+  if (started && run.organizer === 'You' && !hasEnded(run)) return <Card className="join-card"><div><Flag /><h3>Your run is underway</h3><p>Finish it when everyone is back. Runners can then confirm attendance, rate each other and log the run on Activity.</p>{finish.error && <p role="alert">{finish.error.message || 'That didn’t work. Please try again.'}</p>}</div><Button disabled={finish.isPending} onClick={() => finish.mutate(run.id)}>{finish.isPending ? 'Finishing…' : 'Finish run'}</Button></Card>
+  if (started) return <Card className="join-card"><div><ShieldCheck /><h3>This run has started</h3><p>{!run.joined ? 'Joining and leaving are closed.' : hasEnded(run) ? 'Joining and leaving are closed. Confirm attendance, rate your buddy and log your run on Activity.' : 'Joining and leaving are closed. Attendance, ratings and logging open on Activity once the organizer finishes the run.'}</p></div>{run.joined && <Link to="/activity"><Button variant="secondary">Go to Activity</Button></Link>}</Card>
   if (run.organizer === 'You') return <Card className="join-card"><div><ShieldCheck /><h3>You’re organizing this run</h3><p>Organizers stay with their run. Changes and important weather updates will appear here.</p></div></Card>
   return <Card className="join-card"><div><ShieldCheck /><h3>Ready to run?</h3><p>Changes and important weather updates will appear here.</p>{toggle.error && <p role="alert">{toggle.error.message || 'That didn’t work. Please try again.'}</p>}</div><Button variant={run.joined ? 'secondary' : 'primary'} disabled={toggle.isPending} onClick={() => toggle.mutate({ id: run.id, join: !run.joined })}>{toggle.isPending ? 'Updating…' : run.joined ? 'Leave run' : 'Join run'}</Button></Card>
 }
