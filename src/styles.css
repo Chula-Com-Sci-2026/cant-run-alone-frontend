@@ -95,7 +95,19 @@ img.avatar { object-fit:cover; }
 .filter-search input:focus { border-color:#60866f; background:#fff; }
 input, select, textarea { width:100%; min-height:44px; padding:0 12px; color:var(--ink); background:#fff; border:1px solid #cbd3cc; border-radius:9px; }
 textarea { padding:12px; min-height:95px; resize:vertical; }
-select { width:auto; }
+select { width:auto; appearance:none; -webkit-appearance:none; padding-right:38px; background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23176b4d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 13px center / 14px; font-weight:600; cursor:pointer; transition:border-color .15s, box-shadow .15s; }
+select:hover { border-color:#9eafa4; }
+/* Browsers with customizable <select> (Chrome 135+) also get a styled option list; others keep the native one. */
+@supports (appearance: base-select) {
+  select, .filters select, ::picker(select) { appearance:base-select; }
+  select, .filters select { display:flex; align-items:center; }
+  select::picker-icon { display:none; }
+  ::picker(select) { margin-top:6px; padding:6px; border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:0 16px 40px #101d1924; }
+  option { display:flex; align-items:center; gap:8px; min-height:38px; padding:0 12px; border-radius:9px; color:var(--ink); font-size:.86rem; font-weight:600; cursor:pointer; }
+  option:hover, option:focus-visible { background:#eef2ec; outline:none; }
+  option:checked { background:var(--lime); }
+  option::checkmark { color:var(--green); }
+}
 input:focus, select:focus, textarea:focus { border-color:#60866f; }
 .check { display:flex!important; align-items:center; }
 .check input { width:17px; min-height:17px; accent-color:var(--green); }
