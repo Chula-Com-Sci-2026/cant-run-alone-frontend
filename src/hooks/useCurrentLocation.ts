@@ -10,11 +10,13 @@ export function useCurrentLocation() {
   const locate = useCallback(() => {
     if (!navigator.geolocation) { setState({ coordinates: null, status: 'unavailable', message: 'Location is not supported by this browser.' }); return }
     setState({ coordinates: null, status: 'loading' })
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => setState({ coordinates: { latitude: coords.latitude, longitude: coords.longitude }, status: 'ready' }),
-      (error) => setState({ coordinates: null, status: error.code === error.PERMISSION_DENIED ? 'denied' : 'unavailable', message: error.code === error.PERMISSION_DENIED ? 'Location permission is off.' : 'We could not get your current location.' }),
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 30_000 },
-    )
+    const found = ({ coords }: GeolocationPosition) => setState({ coordinates: { latitude: coords.latitude, longitude: coords.longitude }, status: 'ready' })
+    const failed = (error: GeolocationPositionError) => setState({ coordinates: null, status: error.code === error.PERMISSION_DENIED ? 'denied' : 'unavailable', message: error.code === error.PERMISSION_DENIED ? 'Location permission is off.' : 'We could not get your current location.' })
+    // Laptops have no GPS, so a high-accuracy fix often times out; a Wi-Fi fix is close enough for 1 km.
+    navigator.geolocation.getCurrentPosition(found, (error) => {
+      if (error.code === error.PERMISSION_DENIED) { failed(error); return }
+      navigator.geolocation.getCurrentPosition(found, failed, { enableHighAccuracy: false, timeout: 20_000, maximumAge: 600_000 })
+    }, { enableHighAccuracy: true, timeout: 10_000, maximumAge: 30_000 })
   }, [])
   useEffect(() => {
     const timer = window.setTimeout(locate, 0)
