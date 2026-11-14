@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, gateway } from '../api/gateway'
 import { endsAt } from '../api/hooks'
-import type { BuddyRequest, Notification, RunningRecord } from '../api/gateway'
+import type { BuddyRequest, History, Notification, RunningRecord } from '../api/gateway'
 import { Avatar, Button, Card, EmptyState, Status } from '../components/ui'
 import BuddyActivity from '../components/BuddyActivity'
 import type { Run } from '../types'
@@ -81,6 +81,39 @@ function NotificationRow({ item, busy, onRead }: { item: Notification; busy: boo
     <div className="activity-person__text"><p>{text}</p><small>{new Date(item.occurredAt).toLocaleString('en', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small></div>
     {!item.readAt && <div className="activity-person__actions"><Button variant="secondary" disabled={busy} onClick={onRead}>Mark read</Button></div>}
   </Card>
+}
+
+const km = (meters: number) => (meters / 1000).toLocaleString('en', { maximumFractionDigits: 2 })
+const minutes = (seconds: number) => {
+  const total = Math.round(seconds / 60)
+  return total < 60 ? `${total} min` : `${Math.floor(total / 60)} h ${total % 60} min`
+}
+// Minutes per kilometre as m:ss, rounded to whole seconds first so 5:59.6 reads 6:00, not 5:60.
+const pace = (meters: number, seconds: number) => {
+  const perKm = Math.round(seconds / (meters / 1000))
+  return `${Math.floor(perKm / 60)}:${String(perKm % 60).padStart(2, '0')}`
+}
+
+function RunningHistory({ history, runs }: { history: History; runs: Run[] }) {
+  const title = (runId: string) => runs.find((run) => run.id === runId)?.title ?? 'Logged run'
+  const records = [...history.records].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))
+  return <>
+    <h2>Running history</h2>
+    <Card className="history-summary">
+      <div><small>Distance</small><strong>{km(history.totalDistanceMeters)}<span> km</span></strong></div>
+      <div><small>Time</small><strong>{minutes(history.totalDurationSeconds)}</strong></div>
+      <div><small>Runs</small><strong>{records.length}</strong></div>
+      <div><small>Avg pace</small><strong>{pace(history.totalDistanceMeters, history.totalDurationSeconds)}<span> /km</span></strong></div>
+    </Card>
+    <div className="history-list">{records.map((record) => {
+      const date = new Date(record.occurred_at)
+      return <Card className="history-row" key={record.id}>
+        <div className="history-row__date"><strong>{date.getDate()}</strong><span>{date.toLocaleDateString('en', { month: 'short' })}</span></div>
+        <div className="history-row__body"><h3>{title(record.run_id)}</h3><p>{km(record.distance_meters)} km · {minutes(record.duration_seconds)} · {pace(record.distance_meters, record.duration_seconds)} /km</p></div>
+        <Footprints size={20} aria-hidden />
+      </Card>
+    })}</div>
+  </>
 }
 
 function PastRunCard({ run, myId, record }: { run: Run; myId: string; record?: RunningRecord }) {
@@ -192,6 +225,6 @@ export default function ActivityPage() {
     <h2>After your run</h2>{runs.isSuccess && orderedRuns.length === 0 && <p className="section-empty">No finished runs yet. Runs you join appear here once they end.</p>}
     {me.data && orderedRuns.map(run => <PastRunCard key={run.id} run={run} myId={myId} record={recordFor(run.id)} />)}
     {/* Like notifications, only once a run is logged; "0 km · 0 minutes" says nothing. */}
-    {!!history.data?.records.length && <><h2>Running history</h2><p>{history.data.totalDistanceMeters / 1000} km · {Math.round(history.data.totalDurationSeconds / 60)} minutes</p>{history.data.records.map(record => <Card className="activity-record" key={record.id}><p>{record.distance_meters / 1000} km in {Math.round(record.duration_seconds / 60)} minutes · {new Date(record.occurred_at).toLocaleDateString()}</p></Card>)}</>}</>}
+    {!!history.data?.records.length && <RunningHistory history={history.data} runs={runs.data ?? []} />}</>}
   </div>
 }
