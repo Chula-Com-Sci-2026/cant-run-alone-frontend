@@ -27,7 +27,6 @@ h2 { letter-spacing: -.035em; }
 .page { max-width: 1280px; margin: 0 auto; padding: 46px clamp(24px, 5vw, 72px) 90px; }
 .page.narrow { max-width: 960px; }
 .hero { min-height: 310px; padding: clamp(28px, 5vw, 58px); display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; color: white; overflow: hidden; border-radius: 28px; background: radial-gradient(circle at 85% 5%, #39634f 0, transparent 30%), linear-gradient(125deg, #13251e 0%, #1e4936 100%); position: relative; }
-.hero::after { content:""; position:absolute; width:280px; height:280px; right:-60px; top:-90px; border:1px solid #6d927f; border-radius:50%; box-shadow:0 0 0 40px #ffffff09, 0 0 0 80px #ffffff06; }
 .hero h1 { max-width: 690px; margin: 16px 0; position:relative; z-index:1; }
 .hero p { max-width: 590px; color: #c5d1cb; font-size: 1.05rem; margin: 0; }
 .eyebrow, .kicker { display: flex; align-items: center; gap: 7px; color: #557064; font-size: .72rem; font-weight: 800; letter-spacing: .13em; }
@@ -138,7 +137,33 @@ input:focus, select:focus, textarea:focus { border-color:#60866f; }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
 
 .hero-nearby { width:max-content; margin-top:24px; padding:11px 14px; display:flex; align-items:center; gap:8px; color:var(--ink); background:var(--lime); border-radius:11px 11px 11px 3px; font-size:.8rem; font-weight:800; position:relative; z-index:2; }
-.hero-nearby span { color:#49613c; font-size:.68rem; font-weight:650; }
+.hero-nearby { transition:transform .15s; }
+.hero-nearby:hover { transform:translateX(3px); }
+/* Who's nearby radar: the hero's right column, with the run history stat as a compact pill below it. */
+.hero-side { display:flex; flex-direction:column; align-items:center; gap:18px; position:relative; z-index:1; }
+.hero-side .weekly-stat { display:flex; align-items:baseline; gap:8px; min-width:0; padding:10px 16px; }
+.hero-side .weekly-stat strong { font-size:1.5rem; letter-spacing:-.04em; }
+.nearby-radar { display:grid; justify-items:center; gap:12px; color:#fff; }
+.nearby-radar__scope { position:relative; width:210px; aspect-ratio:1; overflow:hidden; border:1px solid #6d927f; border-radius:50%; background:radial-gradient(circle, transparent 0 32%, #ffffff1c 32% calc(32% + 1px), transparent calc(32% + 1px) 64%, #ffffff24 64% calc(64% + 1px), transparent calc(64% + 1px)), #0c1c16b3; box-shadow:0 0 0 14px #ffffff08, 0 0 0 28px #ffffff05, 0 20px 50px #0006; transition:transform .2s, border-color .2s; }
+.nearby-radar__scope::before, .nearby-radar__scope::after { content:""; position:absolute; background:#ffffff14; }
+.nearby-radar__scope::before { left:50%; top:0; bottom:0; width:1px; }
+.nearby-radar__scope::after { top:50%; left:0; right:0; height:1px; }
+.nearby-radar:hover .nearby-radar__scope { transform:scale(1.03); border-color:var(--lime); }
+.nearby-radar__sweep { position:absolute; inset:0; border-radius:50%; background:conic-gradient(from 0deg, transparent 0 280deg, #c8ff3d14 300deg, #c8ff3d70 360deg); animation:radar-sweep 4s linear infinite; }
+.nearby-radar__you { position:absolute; left:50%; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:#fff; box-shadow:0 0 0 4px #ffffff30; }
+.nearby-radar__blip { position:absolute; z-index:1; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--lime); animation:radar-blip 2s ease-out infinite; }
+.nearby-radar__label { display:grid; justify-items:center; gap:3px; text-align:center; }
+.nearby-radar__label > span { display:flex; align-items:center; gap:6px; color:var(--lime); font-size:.62rem; font-weight:800; letter-spacing:.14em; }
+.nearby-radar__label strong { font-size:1rem; }
+.nearby-radar__label small { max-width:230px; overflow:hidden; color:#9fb3a8; font-size:.72rem; white-space:nowrap; text-overflow:ellipsis; }
+.live-dot { width:8px; height:8px; border-radius:50%; background:var(--lime); animation:live-pulse 1.6s ease-out infinite; }
+@keyframes radar-sweep { to { transform:rotate(360deg); } }
+@keyframes radar-blip { 0% { box-shadow:0 0 0 0 #c8ff3d99, 0 0 10px var(--lime); } 100% { box-shadow:0 0 0 9px #c8ff3d00, 0 0 10px var(--lime); } }
+@keyframes live-pulse { 0% { box-shadow:0 0 0 0 #c8ff3d99; } 100% { box-shadow:0 0 0 7px #c8ff3d00; } }
+@media (max-width:620px) {
+  .hero-side { align-self:center; }
+  .nearby-radar__scope { width:180px; }
+}
 .header-actions { display:flex; gap:9px; flex-wrap:wrap; }
 .me-marker { display:grid!important; place-items:center; border-radius:50%; background:#fff; box-shadow:0 0 0 3px #176b4d,0 0 0 8px #ffffffaa,0 3px 14px #0005; }
 .me-marker span { width:10px; height:10px; border-radius:50%; background:#176b4d; }

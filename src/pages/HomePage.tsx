@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useDashboard } from '../api/hooks'
 import { Button, Card, EmptyState, LoadingCards, RunnerCard, WeatherStrip } from '../components/ui'
 import BuddyActivity from '../components/BuddyActivity'
+import NearbyRadar from '../components/NearbyRadar'
 
 export default function HomePage() {
   const { t } = useTranslation()
@@ -14,7 +15,7 @@ export default function HomePage() {
   if (isError || !data) return <Page><Card className="empty"><h3>Home couldn’t load.</h3><p>{error instanceof ApiError ? error.message : 'The request timed out or the service could not be reached. Please try again.'}</p><Button onClick={() => void refetch()}>Try again</Button></Card></Page>
   const run = data.nextRun
   return <Page>
-    <header className="hero"><div><div className="eyebrow"><Sparkles size={15} /> {t('greeting')}, {data.greetingName}</div><h1>{t('findBuddy')}</h1><p>{t('subtitle')}</p><Link className="hero-nearby" to="/nearby"><LocateFixed size={17} /> Who's nearby? <span>Events within 1 km</span></Link></div><div className="weekly-stat"><small>RUN HISTORY</small><strong>{data.weeklyDistanceKm}</strong><span>km covered</span></div></header>
+    <header className="hero"><div><div className="eyebrow"><Sparkles size={15} /> {t('greeting')}, {data.greetingName}</div><h1>{t('findBuddy')}</h1><p>{t('subtitle')}</p><Link className="hero-nearby" to="/nearby"><LocateFixed size={17} /> See who's nearby <ArrowRight size={16} /></Link></div><div className="hero-side"><NearbyRadar /><div className="weekly-stat"><small>RUN HISTORY</small><strong>{data.weeklyDistanceKm}</strong><span>km covered</span></div></div></header>
     <section className="section-heading"><div><span className="kicker">UP NEXT</span><h2>Your next run</h2></div><Link to="/runs">{t('seeAll')} <ArrowRight size={16} /></Link></section>
     {run ? <Card className="next-run">
       <div className="date-tile"><strong>{new Date(`${run.date}T00:00:00`).toLocaleDateString('en', { day: '2-digit' })}</strong><span>{new Date(`${run.date}T00:00:00`).toLocaleDateString('en', { month: 'short' }).toUpperCase()}</span></div>
