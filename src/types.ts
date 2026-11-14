@@ -62,6 +62,8 @@ export interface Run {
   joined?: boolean
   status?: string
   startsAt?: string
+  /** Every run carries its organizer; participant ids are shown only to runners who joined. */
+  organizerId?: string
   participantIds?: string[]
   confirmedIds?: string[]
 }

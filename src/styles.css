@@ -271,3 +271,48 @@ input:focus, select:focus, textarea:focus { border-color:#60866f; }
 .empty > .button-row, .empty > a, .empty > .button { margin-top:16px; }
 .empty > .button-row { justify-content:center; flex-wrap:wrap; }
 .section-empty { margin:0; padding:16px 18px; color:var(--muted); border:1px dashed #cbd3cc; border-radius:14px; font-size:.9rem; }.section-empty a { color:var(--green); font-weight:750; }
+
+/* People in lists: run participants, buddies to invite. Avatar, name with one fact, tags on the right. */
+.person-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px solid var(--line); color:var(--ink); }
+.person-row:first-of-type { border-top:0; }
+.person-row__who { display:flex; align-items:center; gap:12px; flex:1; min-width:0; color:var(--ink); }
+.person-row__who--link:hover strong { color:var(--green); }
+.person-row__text { display:grid; gap:2px; min-width:0; flex:1; }
+.person-row__text small { color:var(--muted); font-size:.76rem; }
+.person-row__tags { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:6px; }
+.run-people { padding:22px 24px; margin-top:15px; }
+.run-people h2 { display:flex; align-items:center; gap:8px; margin:0 0 10px; font-size:1.15rem; }
+.run-people h2 svg { color:var(--green); }
+.run-people > p { margin:0 0 8px; color:var(--muted); font-size:.85rem; }
+.invite-buddies__copy { margin-top:10px; }
+.invited-banner { display:flex; align-items:center; gap:10px; padding:14px 18px; margin-bottom:15px; background:#eefbd2; border-color:#acd82f; }
+.invited-banner svg { color:var(--green); flex:none; }
+.invited-banner p { margin:0; }
+
+/* A buddy's profile: their upcoming runs instead of a request form. */
+.buddy-box { padding:24px; }
+.buddy-box__head { display:flex; align-items:flex-start; gap:12px; margin-bottom:14px; }
+.buddy-box__head > svg { color:var(--green); flex:none; }
+.buddy-box__head > div { flex:1; }
+.buddy-box__head h2 { margin:0 0 4px; font-size:1.2rem; }
+.buddy-box__head p { margin:0; color:var(--muted); font-size:.85rem; }
+.run-lines { display:grid; gap:8px; }
+.run-line { display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--line); border-radius:14px; color:var(--ink); }
+.run-line:hover { border-color:#9eafa4; }
+.run-line > svg { color:var(--green); flex:none; }
+.run-line > span { display:grid; gap:2px; flex:1; min-width:0; }
+.run-line small { color:var(--muted); font-size:.76rem; }
+
+/* Buddy activity feed on Home and Activity. */
+.buddy-activity { display:grid; gap:8px; }
+.buddy-activity__item { display:flex; align-items:center; gap:12px; padding:12px 16px; background:#fff; border:1px solid var(--line); border-radius:16px; color:var(--ink); }
+a.buddy-activity__item:hover { border-color:#9eafa4; }
+.buddy-activity__text { display:flex; align-items:flex-start; gap:7px; flex:1; min-width:0; }
+.buddy-activity__text > span { color:var(--green); padding-top:2px; }
+.buddy-activity__text p { margin:0; font-size:.88rem; line-height:1.5; }
+.buddy-activity__note { margin:4px 0 0; color:var(--muted); font-size:.78rem; }
+@media (max-width: 620px) {
+  .person-row { flex-wrap:wrap; }
+  .person-row__tags { width:100%; justify-content:flex-start; padding-left:52px; }
+  .buddy-activity__item { flex-wrap:wrap; }
+}

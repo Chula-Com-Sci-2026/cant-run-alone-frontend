@@ -6,12 +6,23 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, gateway } from '../api/gateway'
 import type { BuddyRequest, Notification, RunningRecord } from '../api/gateway'
 import { Avatar, Button, Card, EmptyState, Status } from '../components/ui'
+import BuddyActivity from '../components/BuddyActivity'
 import type { Run } from '../types'
 
 type Feedback = { tone: 'success' | 'danger'; text: string }
 
 // Reputation rejects a second rating of the same buddy for the same run with 422 "...has already been taken".
-const isAlreadyRated = (failure: unknown) => failure instanceof ApiError && failure.status === 422 && /taken/i.test(failure.message)
+// It can also answer 409 "duplicate", depending on which check catches it first.
+const isAlreadyRated = (failure: unknown) => failure instanceof ApiError && ((failure.status === 422 && /taken/i.test(failure.message)) || failure.status === 409)
+
+// Reputation has no "my ratings" query, so which buddies I rated for a run is remembered in this
+// browser; without it the Rate button came back after every reload.
+function readRated(runId: string): string[] {
+  try { return JSON.parse(window.localStorage.getItem(`rated:${runId}`) ?? '[]') as string[] } catch { return [] }
+}
+function rememberRated(runId: string, ids: string[]) {
+  try { window.localStorage.setItem(`rated:${runId}`, JSON.stringify(ids)) } catch { /* storage blocked: a duplicate is still reported as already rated */ }
+}
 
 function Step({ number, title, done, children }: { number: number; title: string; done: boolean; children: ReactNode }) {
   return <div className={`run-step ${done ? 'run-step--done' : ''}`}>
@@ -39,11 +50,12 @@ function BuddyRequestRow({ request, myId }: { request: BuddyRequest; myId: strin
   const [error, setError] = useState('')
   const incoming = request.recipientId === myId
   const { name, runner } = useRunnerName(incoming ? request.senderId : request.recipientId)
-  const respond = async (decision: 'accepted' | 'rejected') => {
+  const run = async (operation: () => Promise<unknown>) => {
     setBusy(true)
     setError('')
-    try { await gateway.respondToBuddyRequest(request.id, decision); await client.invalidateQueries() } catch (failure) { setError((failure as { message?: string }).message ?? 'Could not answer this request.') } finally { setBusy(false) }
+    try { await operation(); await client.invalidateQueries() } catch (failure) { setError((failure as { message?: string }).message ?? 'Could not update this request.') } finally { setBusy(false) }
   }
+  const respond = (decision: 'accepted' | 'rejected') => run(() => gateway.respondToBuddyRequest(request.id, decision))
   const sentence = request.status === 'accepted' ? <>You and <strong>{name}</strong> are running buddies</>
     : request.status === 'rejected' ? (incoming ? <>You declined <strong>{name}</strong></> : <><strong>{name}</strong> declined your request</>)
     : incoming ? <><strong>{name}</strong> wants to run with you</> : <>Waiting for <strong>{name}</strong> to answer</>
@@ -53,6 +65,7 @@ function BuddyRequestRow({ request, myId }: { request: BuddyRequest; myId: strin
   return <Card className="activity-person">
     <Avatar runner={runner} />
     <div className="activity-person__text"><p>{sentence}</p>{request.status === 'pending' && request.note && <blockquote className="request-note">{request.note}</blockquote>}{chip}{error && <p role="alert" className="run-feedback run-feedback--danger">{error}</p>}</div>
+    {!incoming && request.status === 'pending' && <div className="activity-person__actions"><Button variant="secondary" disabled={busy} onClick={() => void run(() => gateway.cancelBuddyRequest(request.id))}>Cancel request</Button></div>}
     {incoming && request.status === 'pending' && <div className="activity-person__actions"><Button disabled={busy} onClick={() => void respond('accepted')}>Accept request</Button><Button variant="secondary" disabled={busy} onClick={() => void respond('rejected')}>Decline</Button></div>}
   </Card>
 }
@@ -74,7 +87,8 @@ function PastRunCard({ run, myId, record }: { run: Run; myId: string; record?: R
   const [busy, setBusy] = useState(false)
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [score, setScore] = useState(5)
-  const [rated, setRated] = useState<string[]>([])
+  const [rated, setRatedList] = useState<string[]>(() => readRated(run.id))
+  const markRated = (id: string) => setRatedList((list) => { const next = [...new Set([...list, id])]; rememberRated(run.id, next); return next })
   const [distance, setDistance] = useState(String(run.distanceKm * 1000))
   const [duration, setDuration] = useState('1800')
   const confirmed = run.confirmedIds?.includes(myId) ?? false
@@ -93,8 +107,8 @@ function PastRunCard({ run, myId, record }: { run: Run; myId: string; record?: R
       setFeedback(onFailure?.(failure) ?? { tone: 'danger', text: (failure as { message?: string }).message ?? 'Could not complete this action.' })
     } finally { setBusy(false) }
   }
-  const rate = (id: string, name: string) => act(async () => { await gateway.rateParticipant(run.id, id, score); setRated((list) => [...list, id]) }, `Rated ${name} ${score} out of 5.`,
-    (failure) => { if (!isAlreadyRated(failure)) return null; setRated((list) => [...list, id]); return { tone: 'success', text: `You already rated ${name} for this run.` } })
+  const rate = (id: string, name: string) => act(async () => { await gateway.rateParticipant(run.id, id, score); markRated(id) }, `Rated ${name} ${score} out of 5.`,
+    (failure) => { if (!isAlreadyRated(failure)) return null; markRated(id); return { tone: 'success', text: `You already rated ${name} for this run.` } })
 
   const done = unlocked && Boolean(record)
   const steps = <>
@@ -168,6 +182,7 @@ export default function ActivityPage() {
   return <div className="page narrow activity-page"><header className="page-title"><div><span className="kicker">KEEP YOUR MOMENTUM</span><h1>Your activity</h1><p>Catch up with your buddies and celebrate every run.</p></div></header>{message && <p role="alert">{message}</p>}
     {[requests, notifications, history, runs, me].some(query => query.isError) && <p role="alert">Some activity could not load. Check that you are signed in and the services are running.</p>}
     {nothingYet ? <EmptyState icon={<Footprints />} title="Your running story starts here" text="Buddy requests, notifications and your finished runs will show up here. Find someone at your pace or join a run to get going." action={<div className="button-row"><Link to="/discover"><Button>Find a runner</Button></Link><Link to="/runs"><Button variant="secondary">Browse runs</Button></Link></div>} /> : <>
+    <h2>Buddy activity</h2><BuddyActivity />
     <h2>Buddy requests</h2>{requests.data?.length === 0 && <p className="section-empty">No requests yet. Find a runner on <Link to="/discover">Discover</Link> to send one.</p>}
     {me.data && orderedRequests.map(request => <BuddyRequestRow key={request.id} request={request} myId={myId} />)}
     {/* Only when there is something to read; an empty inbox adds nothing to this page. */}

@@ -45,7 +45,9 @@ async function request<T>(path: string, init?: RequestInit, retry = true): Promi
 }
 
 /** buddy_discovery.proto BuddyRequest. The note is absent when the sender wrote none. */
-export interface BuddyRequest { id: string; senderId: string; recipientId: string; status: string; note?: string }
+export interface BuddyRequest { id: string; senderId: string; recipientId: string; status: string; note?: string; createdAt?: string; updatedAt?: string }
+/** Reputation's rating summary. The average stays hidden (null) until three ratings exist. */
+export interface RatingSummary { runnerId: string; count: number; rating: number | null; hidden: boolean }
 /** running-buddy-contracts notification.openapi.json: NotificationPublic and NotificationsPublic. */
 export interface Notification { id: string; type: string; category: string; data: { requestId: string; senderId: string; recipientId: string; status: string }; occurredAt: string; readAt: string | null }
 export interface NotificationPage { items: Notification[]; unreadCount: number; nextCursor: string | null }
@@ -86,7 +88,11 @@ export const gateway = {
     return request<MyProfile>('/me/profile/photo', { method: 'PUT', body: JSON.stringify({ photoRef: upload.photoRef }) })
   },
   removePhoto: () => request<MyProfile>('/me/profile/photo', { method: 'DELETE' }),
-  getBuddyRequests: () => request<BuddyRequest[]>('/buddy-requests'),
+  async getBuddyRequests(): Promise<BuddyRequest[]> { if (USE_MOCK_API) { await delay(); return [] } return request('/buddy-requests') },
+  // Discovery returns runner ids only; names and avatars come from Profile.
+  async getBuddies(): Promise<string[]> { if (USE_MOCK_API) { await delay(); return [] } return request('/buddies') },
+  cancelBuddyRequest: (id: string) => request(`/buddy-requests/${id}`, { method: 'DELETE' }),
+  getRatingSummary: (runnerId: string) => request<RatingSummary>(`/runners/${runnerId}/rating-summary`),
   respondToBuddyRequest: (id: string, decision: string) => request(`/buddy-requests/${id}`, { method: 'PATCH', body: JSON.stringify({ decision }) }),
   getNotifications: () => request<NotificationPage>('/notifications'),
   markNotificationRead: (id: string) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
