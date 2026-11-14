@@ -63,6 +63,20 @@ describe('delivery 4 user flows', () => {
     expect(save).toHaveBeenCalledWith(expect.objectContaining({ name: 'New Runner', latitude: 13.73, paceMin: 6 }))
   })
 
+  it('sets the running area from the map instead of typed coordinates', async () => {
+    vi.spyOn(gateway, 'getMyProfile').mockRejectedValue(new ApiError('Create profile', 404))
+    vi.spyOn(gateway, 'findPlaceName').mockResolvedValue('Benjakitti Park, Khlong Toei')
+    const save = vi.spyOn(gateway, 'saveProfile').mockResolvedValue({ id: 'me' } as never)
+    view(<ProfilePage />)
+    await userEvent.type(await screen.findByLabelText('Display name'), 'New Runner')
+    expect(screen.queryByLabelText(/latitude/i)).not.toBeInTheDocument()
+    await userEvent.click(await screen.findByRole('button', { name: 'Move pin' }))
+    await waitFor(() => expect(screen.getByLabelText(/Running area/)).toHaveValue('Benjakitti Park, Khlong Toei'), { timeout: 2500 })
+    await userEvent.click(screen.getByRole('button', { name: 'Save profile' }))
+    expect(await screen.findByText('Profile saved.')).toBeInTheDocument()
+    expect(save).toHaveBeenCalledWith(expect.objectContaining({ area: 'Benjakitti Park, Khlong Toei', latitude: 13.74, longitude: 100.55 }))
+  })
+
   it('uploads a profile photo through the photo handshake', async () => {
     vi.spyOn(gateway, 'getMyProfile').mockResolvedValue({ id: 'ray', name: 'Ray Attajak', photoUrl: null } as never)
     const upload = vi.spyOn(gateway, 'uploadPhoto').mockResolvedValue({ id: 'ray' } as never)

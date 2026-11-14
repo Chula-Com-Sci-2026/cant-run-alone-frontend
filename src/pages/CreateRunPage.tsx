@@ -1,36 +1,24 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { ArrowLeft, Check, MapPin } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCreateRun } from '../api/hooks'
 import { Button, Card, WeatherStrip } from '../components/ui'
 import { useQuery } from '@tanstack/react-query'
-import { useTranslation } from 'react-i18next'
 import { gateway } from '../api/gateway'
+import { usePlaceLookup } from '../hooks/usePlaceLookup'
 import type { CreateRunInput } from '../types'
 const MeetingPointMap = lazy(() => import('../components/MeetingPointMap'))
 
 export default function CreateRunPage() {
   const navigate = useNavigate(); const create = useCreateRun(); const [step, setStep] = useState(1); const [form, setForm] = useState<CreateRunInput>(() => ({ title: 'Easy evening 5K', meetingPoint: 'Lumphini Park Gate 4', date: new Date(Date.now() + 86400000).toLocaleDateString('en-CA'), time: '18:30', distanceKm: 5, pace: '6:00–6:30', participantLimit: 8, visibility: 'Public', latitude: 13.7317, longitude: 100.5415 }))
-  const { i18n } = useTranslation()
-  const [placeNote, setPlaceNote] = useState('')
-  const lookup = useRef<{ timer?: number; controller?: AbortController }>({})
-  const cancelLookup = () => { window.clearTimeout(lookup.current.timer); lookup.current.controller?.abort() }
-  useEffect(() => cancelLookup, [])
-  // Dropping the pin names the meeting point; the 1 s wait keeps rapid clicks within Nominatim's limit.
+  // Dropping the pin names the meeting point.
+  const { note: placeNote, lookup, stop: stopLookup } = usePlaceLookup((name) => setForm((current) => ({ ...current, meetingPoint: name })),
+    { found: 'Filled in from the pin. Edit it to name a gate or landmark.', missing: 'No name found for this spot. Please type one.', failed: 'Couldn’t look up this spot. Please type a name.' })
   const movePin = (latitude: number, longitude: number) => {
     setForm((current) => ({ ...current, latitude, longitude }))
-    cancelLookup()
-    setPlaceNote('Finding the place name…')
-    const controller = new AbortController()
-    lookup.current = { controller, timer: window.setTimeout(async () => {
-      try {
-        const name = await gateway.findPlaceName(latitude, longitude, i18n.language.slice(0, 2), controller.signal)
-        if (name) setForm((current) => ({ ...current, meetingPoint: name }))
-        setPlaceNote(name ? 'Filled in from the pin. Edit it to name a gate or landmark.' : 'No name found for this spot. Please type one.')
-      } catch { if (!controller.signal.aborted) setPlaceNote('Couldn’t look up this spot. Please type a name.') }
-    }, 1000) }
+    lookup(latitude, longitude)
   }
-  const typeMeetingPoint = (value: string) => { cancelLookup(); setPlaceNote(''); field('meetingPoint', value) }
+  const typeMeetingPoint = (value: string) => { stopLookup(); field('meetingPoint', value) }
   const forecast = useQuery({ queryKey: ['conditions', form], queryFn: () => gateway.getConditions(form), enabled: step === 2, retry: false })
   const field = (key: keyof CreateRunInput, value: string | number) => setForm({ ...form, [key]: value })
   const submit = () => create.mutate(form, { onSuccess: (run) => navigate(`/runs/${run.id}?created=1`) })

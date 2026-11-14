@@ -11,6 +11,6 @@ function Picker({ position, onChange }: { position: [number, number]; onChange: 
   return <Marker position={position} icon={pinIcon} />
 }
 
-export default function MeetingPointMap({ latitude, longitude, onChange }: { latitude: number; longitude: number; onChange: (latitude: number, longitude: number) => void }) {
-  return <div className="meeting-picker"><MapContainer center={[latitude, longitude]} zoom={15} scrollWheelZoom className="map"><PinchZoomOnly /><PlainMapLayer /><Picker position={[latitude, longitude]} onChange={onChange} /></MapContainer><p>Click the map to move the meeting pin. Use +/− or pinch to zoom.</p></div>
+export default function MeetingPointMap({ latitude, longitude, onChange, hint = 'Click the map to move the meeting pin. Use +/− or pinch to zoom.' }: { latitude: number; longitude: number; onChange: (latitude: number, longitude: number) => void; hint?: string }) {
+  return <div className="meeting-picker"><MapContainer center={[latitude, longitude]} zoom={15} scrollWheelZoom className="map"><PinchZoomOnly /><PlainMapLayer /><Picker position={[latitude, longitude]} onChange={onChange} /></MapContainer><p>{hint}</p></div>
 }
