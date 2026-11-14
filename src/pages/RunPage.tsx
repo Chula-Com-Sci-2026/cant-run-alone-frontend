@@ -28,7 +28,7 @@ export default function RunPage() {
   return <div className="page narrow"><Link className="back" to="/runs"><ArrowLeft size={17} /> Back to runs</Link><header className="run-detail"><span className="kicker">{run.visibility.toUpperCase()} RUN</span><h1>{run.title}</h1><p>Organized by {run.organizer}</p></header>
     {invitedBy && !run.joined && <InvitedBanner inviterId={invitedBy} />}
     <WeatherStrip weather={run.weather} /><div className="detail-grid"><Card><CalendarDays /><small>WHEN</small><strong>{new Date(`${run.date}T00:00:00`).toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })}</strong><span>{run.time} ICT</span></Card><Card><Route /><small>RUN PLAN</small><strong>{run.distanceKm} km</strong><span>{run.pace} min/km</span></Card><Card><Users /><small>RUNNERS</small><strong>{run.participants} of {run.participantLimit}</strong><span>{run.participantLimit - run.participants} places left</span></Card></div>
-    <Card className="meeting-card"><div className="meeting-map"><MapPin size={28} /></div><div><small>PUBLIC MEETING POINT</small><h2>{run.meetingPoint}</h2><p>{run.area} · {run.joined ? 'Exact pin available to joined runners.' : 'Join this run to see the exact pin.'}</p></div></Card>
+    <Card className="meeting-card"><div className="meeting-map"><MapPin size={28} /></div><div><small>PUBLIC MEETING POINT</small><h2>{run.meetingPoint}</h2><p>{run.area && run.area !== run.meetingPoint && `${run.area} · `}{run.joined ? 'Exact pin available to joined runners.' : 'Join this run to see the exact pin.'}</p></div></Card>
     <RunMembership run={run} />
     <RunParticipants run={run} />
     {canInvite && <InviteBuddies run={run} justCreated={params.get('created') === '1'} />}

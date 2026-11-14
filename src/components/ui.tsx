@@ -22,13 +22,18 @@ export function Avatar({ runner, large = false }: { runner: Pick<Runner, 'id' | 
 
 export function WeatherStrip({ weather }: { weather: Weather }) {
   const tone = weather.level === 'great' ? 'success' : weather.level === 'fair' ? 'warning' : 'danger'
+  // "14 Nov, 22:12" rather than the raw ISO string; anything unparseable is shown as it came.
+  const readableTime = (value: string) => {
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString('en', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false })
+  }
   return <div className="weather-strip">
     <Status tone={tone}>{weather.label}</Status>
     <span><span className="weather-icon">{weather.temperature}°</span> Bangkok</span>
     <span><CloudRain size={15} /> {weather.rainChance}%</span>
     <span><Droplets size={15} /> {weather.humidity}%</span>
     <span><Wind size={15} /> PM2.5 {weather.pm25}</span>
-    {weather.stale && <span className="stale">Cached · {weather.updatedAt}</span>}
+    {weather.stale && <span className="stale">Cached · {readableTime(weather.updatedAt)}</span>}
   </div>
 }
 
